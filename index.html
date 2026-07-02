@@ -533,7 +533,7 @@
     <legend>Ilustración</legend>
     <label>Imagen de la miniatura / unidad</label>
     <input type="file" id="illuFile" accept="image/*">
-    <div class="hint">Tamaño recomendado: 600 × 800&nbsp;px (formato vertical, relación 3:4). El recuadro es fijo y la imagen se estira para llenarlo por completo, así que si usas esa proporción se verá sin deformarse.</div>
+    <div class="hint">Tamaño recomendado: 600 × 800&nbsp;px (formato vertical, relación 3:4). El recuadro es fijo y la imagen se estira para llenarlo por completo, así que si usas esa proporción se verá sin deformarse. La imagen se comprime automáticamente al subirla para que el archivo pese poco.</div>
   </fieldset>
 
   <fieldset>
@@ -887,18 +887,56 @@ document.getElementById('addOpt').addEventListener('click', ()=>{
   renderOptRows(); update();
 });
 
-function readFile(input, cb){
+/* Redimensiona y recodifica una imagen para que el .json pese mucho menos,
+   sin depender de archivos externos: sigue quedando embebida en base64,
+   pero ya comprimida. */
+function compressImageFile(file, maxWidth, maxHeight, mimeType, quality){
+  return new Promise((resolve, reject)=>{
+    const reader = new FileReader();
+    reader.onload = e=>{
+      const img = new Image();
+      img.onload = ()=>{
+        let w = img.naturalWidth, h = img.naturalHeight;
+        const ratio = Math.min(1, maxWidth / w, maxHeight / h);
+        w = Math.max(1, Math.round(w * ratio));
+        h = Math.max(1, Math.round(h * ratio));
+        const c = document.createElement('canvas');
+        c.width = w; c.height = h;
+        const ctx = c.getContext('2d');
+        if(mimeType === 'image/jpeg'){
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, w, h);
+        }
+        ctx.drawImage(img, 0, 0, w, h);
+        resolve(c.toDataURL(mimeType, quality));
+      };
+      img.onerror = reject;
+      img.src = e.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+async function handleImageUpload(input, maxWidth, maxHeight, mimeType, quality, onDone){
   const f = input.files[0];
   if(!f) return;
-  const reader = new FileReader();
-  reader.onload = e => cb(e.target.result);
-  reader.readAsDataURL(f);
+  try{
+    const dataUrl = await compressImageFile(f, maxWidth, maxHeight, mimeType, quality);
+    onDone(dataUrl);
+  }catch(err){
+    console.error(err);
+    alert('No se ha podido procesar esa imagen. Inténtalo con otro archivo.');
+  }
 }
+
 document.getElementById('logoFile').addEventListener('change', function(){
-  readFile(this, data => { armyLogoData = data; update(); });
+  handleImageUpload(this, 200, 200, 'image/png', 1, data => { armyLogoData = data; update(); });
+  this.value = '';
 });
 document.getElementById('illuFile').addEventListener('change', function(){
-  readFile(this, data => { illuData = data; update(); });
+  handleImageUpload(this, 900, 1200, 'image/jpeg', 0.85, data => { illuData = data; update(); });
+  this.value = '';
 });
 
 /* ---------- collect / apply state ---------- */
