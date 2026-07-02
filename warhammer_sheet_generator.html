@@ -1,0 +1,1374 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Generador de fichas de unidad</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=PT+Serif:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+  :root{
+    --paper:#ffffff;
+    --ink:#1c1a16;
+    --rule:#1c1a16;
+    --gold:#8a6d2f;
+    --panel:#efeadd;
+    --muted:#6b6455;
+    --accent:#7a1f1f;
+    --bar-gray:#d9d5c6;
+    --bar-border:#7d795f;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    font-family:'PT Serif','Georgia','Times New Roman',serif;
+    background:#e8e3d6;
+    color:var(--ink);
+    display:flex;
+    min-height:100vh;
+  }
+  /* ---------- LEFT: FORM ---------- */
+  .panel{
+    width:400px;
+    min-width:300px;
+    max-width:900px;
+    flex-shrink:0;
+    background:#fbfaf6;
+    border-right:1px solid #d8d2c0;
+    padding:22px 20px 16px;
+    overflow-y:scroll;
+    height:100vh;
+    position:sticky;
+    top:0;
+    scrollbar-width:auto;
+    scrollbar-color:#b6ac8e #ece7d8;
+  }
+  .panel::-webkit-scrollbar{width:12px;}
+  .panel::-webkit-scrollbar-track{background:#ece7d8;}
+  .panel::-webkit-scrollbar-thumb{background:#b6ac8e;border-radius:6px;border:3px solid #ece7d8;}
+  .panel::-webkit-scrollbar-thumb:hover{background:#9c9174;}
+  .resize-handle{
+    width:7px;
+    flex-shrink:0;
+    cursor:col-resize;
+    background:#d8d2c0;
+    position:sticky;
+    top:0;
+    height:100vh;
+  }
+  .resize-handle:hover, .resize-handle.active{background:var(--accent);}
+  .resize-handle::after{
+    content:'';
+    position:absolute;
+    left:2px;top:50%;
+    transform:translateY(-50%);
+    width:3px;height:36px;
+    border-radius:2px;
+    background:rgba(0,0,0,.25);
+  }
+  .panel h1{
+    font-size:15px;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    margin:0 0 4px;
+    font-family:'Trebuchet MS',sans-serif;
+  }
+  .panel .sub{
+    font-family:'Trebuchet MS',sans-serif;
+    font-size:11px;
+    color:var(--muted);
+    margin-bottom:14px;
+  }
+  .type-switch{display:flex;gap:6px;margin-bottom:16px;}
+  .type-btn{
+    flex:1;
+    font-family:'Trebuchet MS',sans-serif;
+    font-size:11.5px;
+    padding:8px 6px;
+    border:1px solid #cfc8b4;
+    background:#fff;
+    border-radius:5px;
+    cursor:pointer;
+  }
+  .type-btn.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+  fieldset{
+    border:1px solid #ddd6c4;
+    border-radius:6px;
+    margin-bottom:14px;
+    padding:10px 12px 14px;
+  }
+  legend{
+    font-family:'Trebuchet MS',sans-serif;
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:.06em;
+    color:var(--accent);
+    padding:0 6px;
+  }
+  label{
+    display:block;
+    font-family:'Trebuchet MS',sans-serif;
+    font-size:11px;
+    color:#444;
+    margin:8px 0 3px;
+  }
+  input[type=text], input[type=number], textarea{
+    width:100%;
+    font-family:'Trebuchet MS',sans-serif;
+    font-size:12.5px;
+    padding:6px 7px;
+    border:1px solid #cfc8b4;
+    border-radius:4px;
+    background:#fff;
+  }
+  textarea{resize:vertical;min-height:44px;}
+  input[type=file]{
+    font-family:'Trebuchet MS',sans-serif;
+    font-size:11px;
+    width:100%;
+  }
+  .row2{display:flex;gap:8px;}
+  .row2 > div{flex:1;}
+  .hint{font-family:'Trebuchet MS',sans-serif;font-size:10.5px;color:var(--muted);margin-top:4px;}
+
+  .preset-row{display:flex;gap:6px;flex-wrap:wrap;}
+  .preset-btn{
+    font-family:'Trebuchet MS',sans-serif;
+    font-size:11px;
+    border:1px solid #cfc8b4;
+    background:#fff;
+    border-radius:4px;
+    padding:6px 8px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:6px;
+    flex:1;
+    min-width:100px;
+  }
+  .preset-btn:hover{border-color:var(--accent);}
+  .preset-swatch{width:12px;height:12px;border-radius:3px;border:1px solid rgba(0,0,0,.3);}
+
+  
+  .stat-row{
+    display:grid;
+    grid-template-columns:1.4fr repeat(9, 28px) 22px 22px;
+    gap:3px;
+    align-items:center;
+    margin-bottom:4px;
+    cursor:grab;
+  }
+  .stat-row.dragging{opacity:.4;}
+  .stat-row input{padding:3px 2px;font-size:10.5px;text-align:center;}
+  .stat-row input.name{text-align:left;padding:3px 5px;}
+  .stat-head{
+    display:grid;
+    grid-template-columns:1.4fr repeat(9, 28px) 22px 22px;
+    gap:3px;
+    font-family:'Trebuchet MS',sans-serif;
+    font-size:9px;
+    text-align:center;
+    color:var(--muted);
+    margin-bottom:3px;
+  }
+  .small-btn{
+    font-family:'Trebuchet MS',sans-serif;
+    font-size:11px;
+    border:1px solid var(--accent);
+    color:var(--accent);
+    background:#fff;
+    border-radius:4px;
+    padding:5px 9px;
+    cursor:pointer;
+    margin-top:6px;
+    margin-right:6px;
+  }
+  .small-btn:hover{background:var(--accent);color:#fff;}
+  .tiny-btn{
+    font-family:'Trebuchet MS',sans-serif;
+    font-size:10.5px;
+    border:1px solid #cfc8b4;
+    color:#444;
+    background:#fff;
+    border-radius:4px;
+    padding:4px 7px;
+    cursor:pointer;
+    margin-top:2px;
+  }
+  .tiny-btn:hover{border-color:var(--accent);color:var(--accent);}
+  .icon-btn{
+    border:1px solid #d8d2c0;
+    background:#fdfcf9;
+    color:#555;
+    cursor:pointer;
+    font-size:12px;
+    line-height:1;
+    width:22px;
+    height:22px;
+    border-radius:4px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:0;
+  }
+  .icon-btn:hover{background:#eee;}
+  .del-btn{
+    border:1px solid #e0b7b7;
+    background:#fdf3f3;
+    color:#b33;
+    cursor:pointer;
+    font-size:12px;
+    line-height:1;
+    width:22px;
+    height:22px;
+    border-radius:4px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:0;
+  }
+  .del-btn:hover{background:#b33;color:#fff;border-color:#b33;}
+  .opt-row, .rule-row{
+    display:flex;gap:6px;margin-bottom:5px;
+    align-items:center;
+    cursor:grab;
+  }
+  .opt-row.dragging{opacity:.4;}
+  .opt-row input, .rule-row input{flex:1;}
+  .drag-dot{font-family:monospace;color:#bbb;font-size:12px;padding:0 2px;user-select:none;}
+
+  .sheet-tabs{display:flex;flex-direction:column;gap:4px;max-height:230px;overflow-y:auto;}
+  .sheet-tab{
+    display:flex;align-items:center;gap:6px;
+    padding:6px 7px;
+    border:1px solid #ddd6c4;
+    border-radius:5px;
+    background:#fff;
+    cursor:pointer;
+    font-family:'Trebuchet MS',sans-serif;
+    font-size:11.5px;
+  }
+  .sheet-tab.active{border-color:var(--accent);background:#faf3ef;}
+  .sheet-tab-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .sheet-tab .icon-btn, .sheet-tab .del-btn{width:20px;height:20px;font-size:10.5px;flex-shrink:0;}
+
+  .queue-list{list-style:none;margin:6px 0;padding:0;}
+  .queue-list li{
+    display:flex;align-items:center;gap:6px;
+    font-family:'Trebuchet MS',sans-serif;
+    font-size:11.5px;
+    padding:5px 7px;
+    background:#f2efe6;
+    border-radius:4px;
+    margin-bottom:4px;
+  }
+  .queue-list li span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .queue-empty{font-family:'Trebuchet MS',sans-serif;font-size:11px;color:var(--muted);}
+
+  .export-bar{
+    position:sticky;
+    bottom:0;
+    margin-top:20px;
+    padding:12px 0 4px;
+    background:linear-gradient(to bottom, transparent, #fbfaf6 22%);
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+  .export-btn{
+    font-family:'Trebuchet MS',sans-serif;
+    font-size:12.5px;
+    font-weight:bold;
+    padding:10px;
+    border-radius:5px;
+    border:none;
+    cursor:pointer;
+    color:#fff;
+  }
+  #btnPng{background:#33322c;}
+  #btnDoc{background:var(--accent);}
+  #btnDocAll{background:#4a5a3a;}
+  #btnDocSummary{background:#5a4a2a;}
+  .export-btn:hover{filter:brightness(1.12);}
+  .export-btn:disabled{opacity:.6;cursor:default;}
+  .file-row{display:flex;gap:8px;align-items:stretch;}
+  .file-row .btnlike{
+    font-family:'Trebuchet MS',sans-serif;
+    font-size:11.5px;
+    border:1px solid #cfc8b4;
+    background:#fff;
+    border-radius:4px;
+    padding:0 9px;
+    height:34px;
+    line-height:1.15;
+    margin:0;
+    cursor:pointer;
+    flex:1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    box-sizing:border-box;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .file-row .btnlike:hover{border-color:var(--accent);}
+  .file-row input[type=file]{display:none;}
+
+  .placeholder-box{
+    font-family:'Trebuchet MS',sans-serif;
+    font-size:12.5px;
+    color:var(--muted);
+    background:#f2efe6;
+    border:1px dashed #cfc8b4;
+    border-radius:8px;
+    padding:22px 18px;
+    text-align:center;
+    line-height:1.6;
+  }
+
+  /* ---------- RIGHT: PREVIEW ---------- */
+  .stage{
+    flex:1;
+    padding:40px;
+    display:flex;
+    justify-content:center;
+    align-items:flex-start;
+    min-width:0;
+  }
+  #card{
+    width:760px;
+    background:#ffffff;
+    border:2px solid var(--ink);
+    box-shadow:0 6px 22px rgba(0,0,0,.18);
+    position:relative;
+    padding:22px 26px 34px;
+    overflow:visible;
+    transition:filter .15s ease;
+  }
+  #card.grayscale-view{filter:grayscale(1);}
+  .title{
+    font-size:28px;
+    font-weight:700;
+    letter-spacing:.03em;
+    text-transform:uppercase;
+    margin:0 0 10px;
+    font-family:'Cinzel','Georgia',serif;
+  }
+  .subbar{
+    background:var(--bar-gray);
+    color:var(--ink);
+    display:flex;
+    align-items:center;
+    gap:9px;
+    padding:2px 12px;
+    border-radius:1px;
+    margin-bottom:16px;
+    border-top:1px solid var(--bar-border);
+    border-bottom:1px solid var(--bar-border);
+  }
+  .subbar .logo{
+    width:50px;height:50px;
+    margin:-14px 0;
+    border-radius:5px;
+    background:#efeadd;
+    border:1px solid var(--bar-border);
+    display:flex;align-items:center;justify-content:center;
+    overflow:hidden;
+    flex-shrink:0;
+  }
+  .subbar .logo img{width:100%;height:100%;object-fit:contain;}
+  .subbar .uname{
+    font-weight:bold;
+    font-size:12px;
+    flex:1;
+  }
+  .subbar .pts{
+    font-family:'PT Serif',serif;
+    font-size:10.5px;
+    white-space:nowrap;
+  }
+  .content-wrap{
+    display:flex;
+    gap:18px;
+    align-items:flex-start;
+  }
+  .left-col{
+    width:68%;
+    min-width:0;
+  }
+  .right-col{
+    width:32%;
+    flex-shrink:0;
+  }
+  table.stats{
+    border-collapse:collapse;
+    font-size:13px;
+    margin-bottom:14px;
+    width:auto;
+  }
+  table.stats th{
+    font-family:'Trebuchet MS',sans-serif;
+    font-weight:bold;
+    font-size:11.5px;
+    padding:4px 8px;
+    border-bottom:1.5px solid var(--ink);
+    text-align:center;
+    white-space:nowrap;
+  }
+  table.stats th:first-child, table.stats td:first-child{text-align:left;padding-left:2px;padding-right:14px;}
+  table.stats td{
+    padding:4px 8px;
+    text-align:center;
+    border-bottom:1px solid #d6cfba;
+    white-space:nowrap;
+  }
+  .field{margin-bottom:10px;font-size:13px;line-height:1.5;}
+  .field b{font-weight:bold;}
+  .opt-title, .rules-title{font-weight:bold;font-size:13px;margin-bottom:4px;}
+  ul.options{margin:0 0 10px;padding-left:18px;font-size:13px;line-height:1.55;}
+  ul.options li{margin-bottom:2px;}
+  .rules-text{font-style:italic;font-size:13px;}
+  .illustration{
+    width:100%;
+    height:300px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    overflow:hidden;
+    border-radius:4px;
+    border:1px solid transparent;
+    background:transparent;
+  }
+  .illustration img{
+    width:100%;
+    height:100%;
+    object-fit:fill;
+    display:block;
+  }
+  .illu-ph{
+    width:100%;
+    height:100%;
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Trebuchet MS',sans-serif;
+    font-size:11px;
+    color:#a49c86;
+    text-align:center;
+    padding:10px;
+  }
+  @media print{
+    body{background:#fff !important; filter:grayscale(1) !important;}
+    .panel, .resize-handle{display:none !important;}
+    .stage{padding:0 !important;}
+    #card{box-shadow:none !important; filter:grayscale(1) !important;}
+  }
+  @media (max-width:900px){
+    body{flex-direction:column;}
+    .panel{width:100% !important;height:auto;position:relative;}
+    .resize-handle{display:none;}
+    .stage{padding:20px;}
+    #card{width:100%;}
+  }
+</style>
+</head>
+<body>
+
+<div class="panel" id="panel">
+  <h1>Generador de fichas</h1>
+  <div class="sub">Rellena los datos y la ficha se genera a la derecha.</div>
+
+  <div class="type-switch" id="typeSwitch">
+    <button type="button" class="type-btn active" data-type="unidad">📜 Hoja de unidad</button>
+    <button type="button" class="type-btn" data-type="personaje">🧙 Hoja de personaje</button>
+  </div>
+
+  <div id="personajePlaceholder" class="placeholder-box" style="display:none;">
+    Las hojas de personaje llegarán próximamente.<br>Mientras tanto puedes seguir creando hojas de unidad.
+  </div>
+
+  <div id="unitPanelContent">
+
+  <fieldset>
+    <legend>Tus fichas</legend>
+    <div class="sheet-tabs" id="sheetTabs"></div>
+    <button class="small-btn" id="addSheetBtn" style="margin-top:8px;">+ Nueva ficha</button>
+    <div class="hint">Cambia entre fichas haciendo clic en ellas. ⧉ duplica, 🗑 elimina.</div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Escudo del ejército</legend>
+    <label>Logo / escudo (opcional)</label>
+    <input type="file" id="logoFile" accept="image/*">
+    <div class="hint">Este icono es único para todo el archivo y se aplica automáticamente a todas tus fichas, así que solo hace falta subirlo una vez.</div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Vista</legend>
+    <button class="small-btn" id="btnGrayscale" style="margin:0;">🎨 Ver a color</button>
+    <div class="hint">Cambia la vista previa y afecta también a lo que se exporta (imagen y Word).</div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Cabecera</legend>
+    <label>Nombre de la unidad (título grande)</label>
+    <input type="text" id="title" value="Caballeros Noveles">
+    <label>Nombre en la barra</label>
+    <input type="text" id="uname" value="Caballeros Noveles">
+    <div class="row2">
+      <div>
+        <label>Puntos por miniatura</label>
+        <input type="number" id="pts" value="20">
+      </div>
+      <div>
+        <label>Tamaño de la unidad</label>
+        <input type="text" id="size" value="5-15">
+      </div>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Ilustración</legend>
+    <label>Imagen de la miniatura / unidad</label>
+    <input type="file" id="illuFile" accept="image/*">
+    <div class="hint">Tamaño recomendado: 600 × 800&nbsp;px (formato vertical, relación 3:4). El recuadro es fijo y la imagen se estira para llenarlo por completo, así que si usas esa proporción se verá sin deformarse.</div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Perfiles de características</legend>
+    <div class="stat-head">
+      <div>Perfil</div><div>M</div><div>HA</div><div>HP</div><div>F</div><div>R</div><div>H</div><div>I</div><div>A</div><div>L</div><div></div><div></div>
+    </div>
+    <div id="statRows"></div>
+    <button class="small-btn" id="addStat">+ Añadir perfil</button>
+    <div class="hint">Arrastra una fila por el icono ⠿ para reordenarla. El icono ⧉ duplica el perfil.</div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Equipo</legend>
+    <label>Descripción del equipo (separa con comas)</label>
+    <textarea id="equipo">Arma de mano, Lanza de Caballería, Escudo, Armadura Pesada, Caballo de Guerra de Bretonia con Barda</textarea>
+  </fieldset>
+
+  <fieldset>
+    <legend>Opciones</legend>
+    <div id="optRows"></div>
+    <button class="small-btn" id="addOpt">+ Añadir opción</button>
+    <div class="hint">Arrastra por el icono ⠿ para reordenar las opciones.</div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Grupo de mando</legend>
+    <div class="row2">
+      <div>
+        <label>Músico (+puntos)</label>
+        <input type="number" id="cmdMusico" placeholder="ej. 5" value="5">
+      </div>
+      <div>
+        <label>Portaestandarte (+puntos)</label>
+        <input type="number" id="cmdPortaestandarte" placeholder="ej. 10" value="10">
+      </div>
+    </div>
+    <div class="row2">
+      <div>
+        <label>Nombre del campeón</label>
+        <input type="text" id="cmdCampeonNombre" placeholder="ej. Jefe de Garra" value="Jefe de Garra">
+      </div>
+      <div>
+        <label>Campeón (+puntos)</label>
+        <input type="number" id="cmdCampeonPts" placeholder="ej. 10" value="10">
+      </div>
+    </div>
+    <div class="hint">Deja un campo de puntos vacío para que esa opción no aparezca en la ficha.</div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Reglas especiales</legend>
+    <label>Nombres de las reglas (separa con comas, se mostrarán en cursiva)</label>
+    <textarea id="rules">Voto del Caballero, Purasangre</textarea>
+  </fieldset>
+
+  <fieldset>
+    <legend>Guardar / cargar todas las fichas</legend>
+    <div class="file-row">
+      <button class="btnlike" id="btnSaveJson">💾 Guardar (.json)</button>
+      <label class="btnlike" for="loadJsonFile">📂 Cargar (.json)</label>
+      <input type="file" id="loadJsonFile" accept="application/json,.json">
+    </div>
+    <div class="hint">Guarda todas tus fichas (perfiles, opciones e imágenes) juntas en un único archivo. Si tu navegador lo permite, te dejará elegir dónde guardarlo.</div>
+  </fieldset>
+
+  <div class="export-bar">
+    <button class="export-btn" id="btnPng">⬇ Descargar como imagen (PNG)</button>
+    <button class="export-btn" id="btnDoc">⬇ Descargar esta ficha para Word (.doc)</button>
+    <button class="export-btn" id="btnDocAll">⬇ Descargar Word con todas tus fichas</button>
+    <button class="export-btn" id="btnDocSummary">📋 Generar resumen de perfiles de unidades</button>
+  </div>
+
+  </div>
+</div>
+
+<div class="resize-handle" id="resizeHandle"></div>
+
+<div class="stage">
+  <div id="card" class="grayscale-view">
+    <div class="title" id="outTitle">Caballeros Noveles</div>
+    <div class="subbar">
+      <div class="logo" id="outLogo"></div>
+      <div class="uname" id="outUname">Caballeros Noveles</div>
+      <div class="pts" id="outPts">puntos por miniatura: 20</div>
+    </div>
+    <div class="content-wrap">
+      <div class="left-col">
+        <table class="stats" id="statsTable"></table>
+        <div class="field"><b>Tamaño de la unidad:</b> <span id="outSize">5-15</span></div>
+        <div class="field"><b>Equipo:</b> <span id="outEquipo"></span></div>
+        <div class="opt-title" id="outOptTitle">Opciones:</div>
+        <ul class="options" id="outOptions"></ul>
+        <div class="field" id="outCmdWrap"><b>Grupo de mando:</b> <span id="outCmd"></span></div>
+        <div class="rules-title">Reglas especiales:</div>
+        <div class="rules-text" id="outRules"></div>
+      </div>
+      <div class="right-col">
+        <div class="illustration" id="outIllu">
+          <div class="illu-ph">Sube una ilustración<br>en el panel izquierdo<br><span style="opacity:.6;font-size:9.5px;">(recomendado 600×800 px)</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const statHeaders = ["M","HA","HP","F","R","H","I","A","L"];
+let idCounter = 1;
+function newId(prefix){ return prefix + (idCounter++); }
+
+let statProfiles = [
+  {name:"Caballero Novel", vals:["10","3","3","3","3","1","3","1","7"]},
+  {name:"Paladín Novel",   vals:["10","3","3","3","3","2","3","1","7"]},
+  {name:"Caballo de Guerra",vals:["20","3","0","3","3","1","3","1","5"]}
+];
+
+let options = [
+  "Puedes convertir a un Caballero Novel en Músico por +7 puntos",
+  "Puedes convertir a un Caballero Novel en Portaestandarte por +14 puntos",
+  "Puedes convertir a un Caballero Novel en Caballero Paladín Novel sin coste de puntos adicional"
+];
+let armyLogoData = null;
+let illuData = null;
+let currentPreset = 'bretonia';
+let sheets = [];
+let currentSheetIndex = -1;
+let grayscaleMode = true;
+
+const PRESETS = {
+  bretonia: {label:'Bretonia', bar:'#d9d5c6', barBorder:'#7d795f', accent:'#7a1f1f'},
+  imperio:  {label:'Imperio',  bar:'#c7cdd6', barBorder:'#5c6a78', accent:'#8a6d2f'},
+  orcos:    {label:'Orcos y Trasgos', bar:'#b9c79a', barBorder:'#5a6a3e', accent:'#3c4a1e'}
+};
+
+function applyPreset(key){
+  const p = PRESETS[key];
+  if(!p) return;
+  currentPreset = key;
+  const root = document.documentElement.style;
+  root.setProperty('--paper', '#ffffff');
+  root.setProperty('--bar-gray', p.bar);
+  root.setProperty('--bar-border', p.barBorder);
+  root.setProperty('--accent', p.accent);
+}
+
+/* ---------- grayscale toggle ---------- */
+document.getElementById('btnGrayscale').addEventListener('click', ()=>{
+  grayscaleMode = !grayscaleMode;
+  const btn = document.getElementById('btnGrayscale');
+  const card = document.getElementById('card');
+  if(grayscaleMode){
+    card.classList.add('grayscale-view');
+    btn.textContent = '🎨 Ver a color';
+  }else{
+    card.classList.remove('grayscale-view');
+    btn.textContent = '⚫ Ver en blanco y negro';
+  }
+});
+
+function grayscaleImageData(dataUrl){
+  return new Promise(resolve=>{
+    if(!dataUrl){ resolve(dataUrl); return; }
+    const img = new Image();
+    img.onload = ()=>{
+      const c = document.createElement('canvas');
+      c.width = img.naturalWidth || 1;
+      c.height = img.naturalHeight || 1;
+      const ctx = c.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      try{
+        const id = ctx.getImageData(0, 0, c.width, c.height);
+        const d = id.data;
+        for(let i=0;i<d.length;i+=4){
+          const gray = 0.299*d[i] + 0.587*d[i+1] + 0.114*d[i+2];
+          d[i]=d[i+1]=d[i+2]=gray;
+        }
+        ctx.putImageData(id, 0, 0);
+        resolve(c.toDataURL('image/png'));
+      }catch(err){
+        resolve(dataUrl);
+      }
+    };
+    img.onerror = ()=> resolve(dataUrl);
+    img.src = dataUrl;
+  });
+}
+
+/* ---------- stat profile rows rendering ---------- */
+function renderStatRows(){
+  const box = document.getElementById('statRows');
+  box.innerHTML = '';
+  statProfiles.forEach((p, i)=>{
+    const row = document.createElement('div');
+    row.className = 'stat-row';
+    row.draggable = true;
+    row.dataset.index = i;
+    row.innerHTML = `<input class="name" data-i="${i}" data-f="name" value="${escAttr(p.name)}">` +
+      p.vals.map((v,j)=>`<input data-i="${i}" data-j="${j}" value="${escAttr(v)}">`).join('') +
+      `<button class="icon-btn" data-dup="${i}" title="Duplicar perfil">⧉</button>` +
+      `<button class="del-btn" data-del="${i}" title="Eliminar perfil">🗑</button>`;
+    box.appendChild(row);
+  });
+  box.querySelectorAll('input[data-f="name"]').forEach(inp=>{
+    inp.addEventListener('input', e=>{ statProfiles[e.target.dataset.i].name = e.target.value; update(); });
+  });
+  box.querySelectorAll('input[data-j]').forEach(inp=>{
+    inp.addEventListener('input', e=>{
+      statProfiles[e.target.dataset.i].vals[e.target.dataset.j] = e.target.value; update();
+    });
+  });
+  box.querySelectorAll('[data-del]').forEach(btn=>{
+    btn.addEventListener('click', e=>{
+      statProfiles.splice(parseInt(e.target.dataset.del),1);
+      renderStatRows(); update();
+    });
+  });
+  box.querySelectorAll('[data-dup]').forEach(btn=>{
+    btn.addEventListener('click', e=>{
+      const idx = parseInt(e.target.dataset.dup);
+      const copy = JSON.parse(JSON.stringify(statProfiles[idx]));
+      copy.name = copy.name + ' (copia)';
+      statProfiles.splice(idx+1, 0, copy);
+      renderStatRows(); update();
+    });
+  });
+  addDragHandlers(box, '.stat-row', statProfiles, ()=>{ renderStatRows(); update(); });
+}
+
+document.getElementById('addStat').addEventListener('click', ()=>{
+  statProfiles.push({name:'Nuevo perfil', vals:['0','0','0','0','0','0','0','0','0']});
+  renderStatRows(); update();
+});
+
+
+/* ---------- options rendering ---------- */
+function renderOptRows(){
+  const box = document.getElementById('optRows');
+  box.innerHTML = '';
+  options.forEach((o,i)=>{
+    const row = document.createElement('div');
+    row.className = 'opt-row';
+    row.draggable = true;
+    row.dataset.index = i;
+    row.innerHTML = `<span class="drag-dot">⠿</span><input value="${escAttr(o)}" data-i="${i}"><button class="del-btn" data-delo="${i}" title="Eliminar opción">🗑</button>`;
+    box.appendChild(row);
+  });
+  box.querySelectorAll('input[data-i]').forEach(inp=>{
+    inp.addEventListener('input', e=>{ options[e.target.dataset.i] = e.target.value; update(); });
+  });
+  box.querySelectorAll('[data-delo]').forEach(btn=>{
+    btn.addEventListener('click', e=>{
+      options.splice(parseInt(e.target.dataset.delo),1);
+      renderOptRows(); update();
+    });
+  });
+  addDragHandlers(box, '.opt-row', options, ()=>{ renderOptRows(); update(); });
+}
+
+function addDragHandlers(box, selector, arr, onDone){
+  let dragIndex = null;
+  box.querySelectorAll(selector).forEach(row=>{
+    row.addEventListener('dragstart', e=>{
+      dragIndex = parseInt(row.dataset.index);
+      row.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    row.addEventListener('dragend', ()=> row.classList.remove('dragging'));
+    row.addEventListener('dragover', e=> e.preventDefault());
+    row.addEventListener('drop', e=>{
+      e.preventDefault();
+      const dropIndex = parseInt(row.dataset.index);
+      if(dragIndex === null || dragIndex === dropIndex) return;
+      const moved = arr.splice(dragIndex,1)[0];
+      arr.splice(dropIndex,0,moved);
+      dragIndex = null;
+      onDone();
+    });
+  });
+}
+
+function escAttr(s){ return String(s).replace(/"/g,'&quot;'); }
+function escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function grupoMandoText(musico, portaestandarte, campeonNombre, campeonPts){
+  const parts = [];
+  if(musico !== '' && musico !== null && musico !== undefined){
+    parts.push(`Músico (+${musico})`);
+  }
+  if(portaestandarte !== '' && portaestandarte !== null && portaestandarte !== undefined){
+    parts.push(`Portaestandarte (+${portaestandarte})`);
+  }
+  if(campeonPts !== '' && campeonPts !== null && campeonPts !== undefined){
+    const label = (campeonNombre && campeonNombre.trim()) ? campeonNombre.trim() : 'Campeón';
+    parts.push(`${label} (+${campeonPts})`);
+  }
+  return parts.join(', ');
+}
+
+function buildStatsTableInnerHtml(profs){
+  let thead = '<tr><th></th>' + statHeaders.map(h=>`<th>${h}</th>`).join('') + '</tr>';
+  let rows = profs.map(p=>{
+    return '<tr><td>'+escHtml(p.name)+'</td>' + p.vals.map(v=>`<td>${escHtml(v)}</td>`).join('') + '</tr>';
+  }).join('');
+  return thead + rows;
+}
+
+function update(){
+  document.getElementById('outTitle').textContent = document.getElementById('title').value;
+  document.getElementById('outUname').textContent = document.getElementById('uname').value;
+  document.getElementById('outPts').textContent = 'puntos por miniatura: ' + document.getElementById('pts').value;
+  document.getElementById('outSize').textContent = document.getElementById('size').value;
+  document.getElementById('outEquipo').textContent = document.getElementById('equipo').value;
+
+  const rulesRaw = document.getElementById('rules').value.split(',').map(s=>s.trim()).filter(Boolean);
+  document.getElementById('outRules').textContent = rulesRaw.join(', ');
+
+  const optBox = document.getElementById('outOptions');
+  const validOptions = options.filter(o=>o.trim());
+  optBox.innerHTML = validOptions.map(o=>`<li>${escHtml(o)}</li>`).join('');
+  const optDisplay = validOptions.length ? '' : 'none';
+  document.getElementById('outOptTitle').style.display = optDisplay;
+  optBox.style.display = optDisplay;
+
+  const cmdText = grupoMandoText(
+    document.getElementById('cmdMusico').value,
+    document.getElementById('cmdPortaestandarte').value,
+    document.getElementById('cmdCampeonNombre').value,
+    document.getElementById('cmdCampeonPts').value
+  );
+  document.getElementById('outCmd').textContent = cmdText;
+  document.getElementById('outCmdWrap').style.display = cmdText ? '' : 'none';
+
+  document.getElementById('statsTable').innerHTML = buildStatsTableInnerHtml(statProfiles);
+
+  const logoBox = document.getElementById('outLogo');
+  logoBox.innerHTML = armyLogoData ? `<img src="${armyLogoData}">` : '';
+
+  const illuBox = document.getElementById('outIllu');
+  illuBox.innerHTML = illuData ? `<img src="${illuData}">` : '<div class="illu-ph">Sube una ilustración<br>en el panel izquierdo<br><span style="opacity:.6;font-size:9.5px;">(recomendado 600×800 px)</span></div>';
+
+  syncCurrentSheet();
+}
+
+['title','uname','pts','size','equipo','rules','cmdMusico','cmdPortaestandarte','cmdCampeonNombre','cmdCampeonPts'].forEach(id=>{
+  document.getElementById(id).addEventListener('input', update);
+});
+
+document.getElementById('addOpt').addEventListener('click', ()=>{
+  options.push('Nueva opción');
+  renderOptRows(); update();
+});
+
+function readFile(input, cb){
+  const f = input.files[0];
+  if(!f) return;
+  const reader = new FileReader();
+  reader.onload = e => cb(e.target.result);
+  reader.readAsDataURL(f);
+}
+document.getElementById('logoFile').addEventListener('change', function(){
+  readFile(this, data => { armyLogoData = data; update(); });
+});
+document.getElementById('illuFile').addEventListener('change', function(){
+  readFile(this, data => { illuData = data; update(); });
+});
+
+/* ---------- collect / apply state ---------- */
+function collectState(){
+  return {
+    title: document.getElementById('title').value,
+    uname: document.getElementById('uname').value,
+    pts: document.getElementById('pts').value,
+    size: document.getElementById('size').value,
+    equipo: document.getElementById('equipo').value,
+    rules: document.getElementById('rules').value,
+    cmdMusico: document.getElementById('cmdMusico').value,
+    cmdPortaestandarte: document.getElementById('cmdPortaestandarte').value,
+    cmdCampeonNombre: document.getElementById('cmdCampeonNombre').value,
+    cmdCampeonPts: document.getElementById('cmdCampeonPts').value,
+    statProfiles: JSON.parse(JSON.stringify(statProfiles)),
+    options: JSON.parse(JSON.stringify(options)),
+    illuData,
+    preset: currentPreset
+  };
+}
+
+function applyState(s){
+  document.getElementById('title').value = s.title ?? '';
+  document.getElementById('uname').value = s.uname ?? '';
+  document.getElementById('pts').value = s.pts ?? '';
+  document.getElementById('size').value = s.size ?? '';
+  document.getElementById('equipo').value = s.equipo ?? '';
+  document.getElementById('rules').value = s.rules ?? '';
+  document.getElementById('cmdMusico').value = s.cmdMusico ?? '';
+  document.getElementById('cmdPortaestandarte').value = s.cmdPortaestandarte ?? '';
+  document.getElementById('cmdCampeonNombre').value = s.cmdCampeonNombre ?? '';
+  document.getElementById('cmdCampeonPts').value = s.cmdCampeonPts ?? '';
+
+  if(s.statProfiles){
+    statProfiles = s.statProfiles;
+  }else if(s.profiles){
+    /* migration from the profiles-with-icon format used briefly before */
+    statProfiles = [];
+    s.profiles.forEach(p=>{
+      (p.units||[]).forEach(u=> statProfiles.push({name:u.name, vals:u.vals}));
+    });
+  }else{
+    statProfiles = [];
+  }
+  options = s.options || [];
+  if(!armyLogoData && s.logoData) armyLogoData = s.logoData; /* migration from old per-sheet logo */
+  illuData = s.illuData || null;
+  if(s.preset && PRESETS[s.preset]) applyPreset(s.preset);
+  renderStatRows(); renderOptRows(); update();
+}
+
+/* ---------- multi-sheet management ---------- */
+function makeBlankState(){
+  return {
+    title:'Nueva ficha', uname:'Nueva ficha', pts:'', size:'', equipo:'', rules:'',
+    cmdMusico:'', cmdPortaestandarte:'', cmdCampeonNombre:'', cmdCampeonPts:'',
+    statProfiles:[{name:'Nuevo perfil', vals:['0','0','0','0','0','0','0','0','0']}],
+    options:[], illuData:null, preset:'bretonia'
+  };
+}
+
+function syncCurrentSheet(){
+  if(currentSheetIndex >= 0 && currentSheetIndex < sheets.length){
+    sheets[currentSheetIndex] = collectState();
+    const tab = document.querySelector(`.sheet-tab[data-idx="${currentSheetIndex}"] .sheet-tab-name`);
+    if(tab) tab.textContent = sheets[currentSheetIndex].title || 'Sin título';
+  }
+}
+
+function renderSheetTabs(){
+  const box = document.getElementById('sheetTabs');
+  if(!box) return;
+  box.innerHTML = '';
+  sheets.forEach((sh, i)=>{
+    const tab = document.createElement('div');
+    tab.className = 'sheet-tab' + (i === currentSheetIndex ? ' active' : '');
+    tab.dataset.idx = i;
+    tab.innerHTML = `<span class="sheet-tab-name">${escHtml(sh.title || 'Sin título')}</span>` +
+      `<button class="icon-btn" data-sdup="${i}" title="Duplicar ficha">⧉</button>` +
+      `<button class="del-btn" data-sdel="${i}" title="Eliminar ficha">🗑</button>`;
+    tab.addEventListener('click', e=>{
+      if(e.target.closest('button')) return;
+      switchToSheet(i);
+    });
+    tab.querySelector('[data-sdup]').addEventListener('click', e=>{
+      e.stopPropagation();
+      duplicateSheetAt(parseInt(e.currentTarget.dataset.sdup));
+    });
+    tab.querySelector('[data-sdel]').addEventListener('click', e=>{
+      e.stopPropagation();
+      deleteSheetAt(parseInt(e.currentTarget.dataset.sdel));
+    });
+    box.appendChild(tab);
+  });
+}
+
+function switchToSheet(index){
+  if(index === currentSheetIndex) return;
+  syncCurrentSheet();
+  currentSheetIndex = index;
+  applyState(sheets[currentSheetIndex]);
+  renderSheetTabs();
+}
+
+document.getElementById('addSheetBtn').addEventListener('click', ()=>{
+  syncCurrentSheet();
+  sheets.push(makeBlankState());
+  currentSheetIndex = sheets.length - 1;
+  applyState(sheets[currentSheetIndex]);
+  renderSheetTabs();
+});
+
+function duplicateSheetAt(index){
+  syncCurrentSheet();
+  const copy = JSON.parse(JSON.stringify(sheets[index]));
+  copy.title = (copy.title || 'Ficha') + ' (copia)';
+  sheets.splice(index + 1, 0, copy);
+  currentSheetIndex = index + 1;
+  applyState(sheets[currentSheetIndex]);
+  renderSheetTabs();
+}
+
+function deleteSheetAt(index){
+  sheets.splice(index, 1);
+  if(sheets.length === 0){
+    sheets.push(makeBlankState());
+  }
+  if(currentSheetIndex >= sheets.length){
+    currentSheetIndex = sheets.length - 1;
+  }else if(index < currentSheetIndex){
+    currentSheetIndex -= 1;
+  }else if(index === currentSheetIndex){
+    currentSheetIndex = Math.min(currentSheetIndex, sheets.length - 1);
+  }
+  applyState(sheets[currentSheetIndex]);
+  renderSheetTabs();
+}
+
+/* ---------- save / load json ---------- */
+async function saveJsonWithPicker(dataObj, suggestedName){
+  const jsonStr = JSON.stringify(dataObj, null, 2);
+  if(window.showSaveFilePicker){
+    try{
+      const handle = await window.showSaveFilePicker({
+        suggestedName: suggestedName,
+        types: [{description:'Ficha JSON', accept:{'application/json':['.json']}}]
+      });
+      const writable = await handle.createWritable();
+      await writable.write(jsonStr);
+      await writable.close();
+      return;
+    }catch(err){
+      if(err && err.name === 'AbortError') return;
+      /* fall through to normal download */
+    }
+  }
+  const blob = new Blob([jsonStr], {type:'application/json'});
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = suggestedName;
+  link.click();
+}
+
+document.getElementById('btnSaveJson').addEventListener('click', ()=>{
+  syncCurrentSheet();
+  const data = { sheets: JSON.parse(JSON.stringify(sheets)), activeIndex: currentSheetIndex, armyLogoData };
+  saveJsonWithPicker(data, 'coleccion_fichas.json');
+});
+document.getElementById('loadJsonFile').addEventListener('change', function(){
+  const f = this.files[0];
+  if(!f) return;
+  const reader = new FileReader();
+  reader.onload = e=>{
+    try{
+      const data = JSON.parse(e.target.result);
+      if(Array.isArray(data.sheets) && data.sheets.length){
+        sheets = data.sheets;
+        currentSheetIndex = Math.min(Math.max(data.activeIndex || 0, 0), sheets.length - 1);
+      }else{
+        /* older single-sheet export */
+        sheets = [data];
+        currentSheetIndex = 0;
+      }
+      armyLogoData = data.armyLogoData || null;
+      applyState(sheets[currentSheetIndex]);
+      renderSheetTabs();
+    }catch(err){
+      alert('No se ha podido leer ese archivo. Comprueba que sea un .json exportado desde aquí.');
+    }
+  };
+  reader.readAsText(f);
+  this.value = '';
+});
+
+/* ---------- image export ---------- */
+function waitForImages(container){
+  const imgs = Array.from(container.querySelectorAll('img'));
+  return Promise.all(imgs.map(img=>{
+    if(img.complete && img.naturalWidth > 0) return Promise.resolve();
+    return new Promise(res=>{
+      img.addEventListener('load', res, {once:true});
+      img.addEventListener('error', res, {once:true});
+    });
+  }));
+}
+
+document.getElementById('btnPng').addEventListener('click', ()=>{
+  const btn = document.getElementById('btnPng');
+  const card = document.getElementById('card');
+  const originalLabel = btn.textContent;
+  btn.textContent = 'Generando imagen...';
+  btn.disabled = true;
+  waitForImages(card).then(()=>{
+    return html2canvas(card, {
+      backgroundColor:'#ffffff',
+      scale:2,
+      useCORS:true,
+      allowTaint:true,
+      imageTimeout:0
+    });
+  }).then(canvas=>{
+    if(grayscaleMode){
+      const ctx = canvas.getContext('2d');
+      const id = ctx.getImageData(0,0,canvas.width,canvas.height);
+      const d = id.data;
+      for(let i=0;i<d.length;i+=4){
+        const gray = 0.299*d[i] + 0.587*d[i+1] + 0.114*d[i+2];
+        d[i]=d[i+1]=d[i+2]=gray;
+      }
+      ctx.putImageData(id,0,0);
+    }
+    const link = document.createElement('a');
+    link.download = (document.getElementById('title').value || 'ficha').replace(/\s+/g,'_') + (grayscaleMode ? '_bn' : '') + '.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  }).catch(err=>{
+    console.error(err);
+    alert('Hubo un problema al generar la imagen. Inténtalo de nuevo.');
+  }).finally(()=>{
+    btn.textContent = originalLabel;
+    btn.disabled = false;
+  });
+});
+
+/* ---------- word export ---------- */
+function buildStatsTableWordHtml(profs){
+  const cellFont = "font-family:'PT Serif',Georgia,serif;font-size:10.5pt;";
+  const thStyle = `border:1px solid #1c1a16;padding:3px 7px;background:#e6e2d4;font-weight:bold;text-align:center;${cellFont}`;
+  let head = `<tr><th style="${thStyle}text-align:left;"></th>` + statHeaders.map(h=>`<th style="${thStyle}">${h}</th>`).join('') + '</tr>';
+  let rows = profs.map(p=>{
+    return `<tr><td style="border:1px solid #1c1a16;padding:3px 7px;font-weight:bold;${cellFont}">${escHtml(p.name)}</td>` +
+      p.vals.map(v=>`<td style="border:1px solid #1c1a16;padding:3px 7px;text-align:center;${cellFont}">${escHtml(v)}</td>`).join('') + '</tr>';
+  }).join('');
+  return `<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;width:100%;margin-bottom:12px;">${head}${rows}</table>`;
+}
+
+function buildUnitWordHtml(s, grayscaleMode, logoDataForExport){
+  const rulesRaw = (s.rules||'').split(',').map(x=>x.trim()).filter(Boolean).join(', ');
+  const optItemsHtml = (s.options||[]).filter(o=>o.trim()).map(o=>`<li style="margin-bottom:2px;">${escHtml(o)}</li>`).join('');
+  const cmdText = grupoMandoText(s.cmdMusico, s.cmdPortaestandarte, s.cmdCampeonNombre, s.cmdCampeonPts);
+
+  const preset = PRESETS[s.preset] || PRESETS[currentPreset] || PRESETS.bretonia;
+  const barBg = grayscaleMode ? '#d6d6d6' : preset.bar;
+  const barBorder = grayscaleMode ? '#888888' : preset.barBorder;
+
+  const bodyFont = "font-family:'PT Serif',Georgia,serif;font-size:11pt;color:#1c1a16;";
+  const logoImg = logoDataForExport ? `<img src="${logoDataForExport}" width="46" height="46" style="display:block;">` : '';
+  const illuImg = s.illuData ? `<img src="${s.illuData}" width="220" height="300" style="display:block;">` : '';
+
+  return `
+  <table cellpadding="0" cellspacing="0" border="0" style="width:700px;border:2px solid #1c1a16;border-collapse:collapse;background:#ffffff;margin-bottom:24px;">
+    <tr>
+      <td colspan="2" style="border:none;padding:16px 22px 8px 22px;">
+        <div style="font-family:Georgia,'Times New Roman',serif;font-size:22pt;font-weight:bold;text-transform:uppercase;letter-spacing:1px;color:#1c1a16;">${escHtml(s.title||'')}</div>
+      </td>
+    </tr>
+    <tr>
+      <td colspan="2" style="border:none;padding:0 22px 14px 22px;">
+        <table cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;">
+          <tr>
+            <td style="background:${barBg};border-top:1px solid ${barBorder};border-bottom:1px solid ${barBorder};width:50px;padding:3px 8px;">${logoImg}</td>
+            <td style="background:${barBg};border-top:1px solid ${barBorder};border-bottom:1px solid ${barBorder};padding:3px 8px;font-weight:bold;font-size:10.5pt;font-family:'PT Serif',Georgia,serif;color:#1c1a16;">${escHtml(s.uname||'')}</td>
+            <td style="background:${barBg};border-top:1px solid ${barBorder};border-bottom:1px solid ${barBorder};padding:3px 8px;text-align:right;white-space:nowrap;font-size:9.5pt;font-family:'PT Serif',Georgia,serif;color:#1c1a16;">puntos por miniatura: ${escHtml(s.pts||'')}</td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+    <tr>
+      <td style="border:none;vertical-align:top;width:460px;padding:0 12px 20px 22px;">
+        ${buildStatsTableWordHtml(s.statProfiles||[])}
+        <div style="${bodyFont}margin:0 0 8px;"><b>Tamaño de la unidad:</b> ${escHtml(s.size||'')}</div>
+        <div style="${bodyFont}margin:0 0 8px;"><b>Equipo:</b> ${escHtml(s.equipo||'')}</div>
+        ${optItemsHtml ? `<div style="${bodyFont}font-weight:bold;margin:0 0 4px;">Opciones:</div><ul style="${bodyFont}margin:0 0 8px;padding-left:18px;">${optItemsHtml}</ul>` : ''}
+        ${cmdText ? `<div style="${bodyFont}margin:0 0 8px;"><b>Grupo de mando:</b> ${escHtml(cmdText)}</div>` : ''}
+        <div style="${bodyFont}font-weight:bold;margin:0 0 2px;">Reglas especiales:</div>
+        <div style="${bodyFont}font-style:italic;">${escHtml(rulesRaw)}</div>
+      </td>
+      <td style="border:none;vertical-align:top;width:220px;padding:0 22px 20px 12px;">
+        <table cellpadding="0" cellspacing="0" border="0" style="width:220px;"><tr><td style="width:220px;height:300px;padding:0;overflow:hidden;">${illuImg}</td></tr></table>
+      </td>
+    </tr>
+  </table>
+  `;
+}
+
+function wordDocWrapper(bodyHtml){
+  return `
+  <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+  <head><meta charset="utf-8">
+  <!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View></w:WordDocument></xml><![endif]-->
+  <style>
+    body{font-family:'PT Serif', Georgia, serif; color:#1c1a16; background:#fff;}
+    table{border-collapse:collapse;}
+  </style></head>
+  <body>${bodyHtml}</body></html>`;
+}
+
+document.getElementById('btnDoc').addEventListener('click', async ()=>{
+  const btn = document.getElementById('btnDoc');
+  const original = btn.textContent;
+  btn.textContent = 'Generando documento...';
+  btn.disabled = true;
+  try{
+    let s = collectState();
+    let logoForExport = armyLogoData;
+    if(grayscaleMode){
+      logoForExport = await grayscaleImageData(armyLogoData);
+      s.illuData = await grayscaleImageData(s.illuData);
+    }
+    const html = wordDocWrapper(buildUnitWordHtml(s, grayscaleMode, logoForExport));
+    const blob = new Blob(['\ufeff', html], {type:'application/msword'});
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = (s.title || 'ficha').replace(/\s+/g,'_') + (grayscaleMode ? '_bn' : '') + '.doc';
+    link.click();
+  }finally{
+    btn.textContent = original;
+    btn.disabled = false;
+  }
+});
+
+document.getElementById('btnDocAll').addEventListener('click', async ()=>{
+  syncCurrentSheet();
+  if(sheets.length === 0){
+    alert('No hay ninguna ficha creada todavía.');
+    return;
+  }
+  const btn = document.getElementById('btnDocAll');
+  const original = btn.textContent;
+  btn.textContent = 'Generando documento...';
+  btn.disabled = true;
+  try{
+    let logoForExport = armyLogoData;
+    if(grayscaleMode){
+      logoForExport = await grayscaleImageData(armyLogoData);
+    }
+    const parts = [];
+    for(let i=0;i<sheets.length;i++){
+      let s = sheets[i];
+      if(grayscaleMode){
+        s = Object.assign({}, s);
+        s.illuData = await grayscaleImageData(s.illuData);
+      }
+      const unitHtml = buildUnitWordHtml(s, grayscaleMode, logoForExport);
+      parts.push(i === 0 ? unitHtml : `<br clear="all" style="mso-special-character:line-break;page-break-before:always;">${unitHtml}`);
+    }
+    const html = wordDocWrapper(parts.join(''));
+    const blob = new Blob(['\ufeff', html], {type:'application/msword'});
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'coleccion_fichas' + (grayscaleMode ? '_bn' : '') + '.doc';
+    link.click();
+  }finally{
+    btn.textContent = original;
+    btn.disabled = false;
+  }
+});
+
+document.getElementById('btnDocSummary').addEventListener('click', async ()=>{
+  syncCurrentSheet();
+  if(sheets.length === 0){
+    alert('No hay ninguna ficha creada todavía.');
+    return;
+  }
+  const btn = document.getElementById('btnDocSummary');
+  const original = btn.textContent;
+  btn.textContent = 'Generando resumen...';
+  btn.disabled = true;
+  try{
+    const thStyle = "border:1px solid #1c1a16;padding:3px 7px;background:#e6e2d4;font-weight:bold;text-align:center;font-family:'PT Serif',Georgia,serif;font-size:10pt;";
+    const tdStyle = "border:1px solid #1c1a16;padding:3px 7px;font-family:'PT Serif',Georgia,serif;font-size:10pt;";
+    const numCols = 1 + statHeaders.length;
+    let rows = '';
+    sheets.forEach(s=>{
+      const profs = s.statProfiles || [];
+      if(profs.length === 0) return;
+      const rulesRaw = (s.rules||'').split(',').map(x=>x.trim()).filter(Boolean).join(', ');
+      rows += `<tr><td colspan="${numCols}" style="border:1px solid #1c1a16;padding:5px 7px;background:#d9d5c6;font-weight:bold;font-family:'PT Serif',Georgia,serif;font-size:11pt;">${escHtml(s.title||'Sin título')}</td></tr>`;
+      profs.forEach(p=>{
+        rows += `<tr><td style="${tdStyle}font-weight:bold;">${escHtml(p.name)}</td>` +
+          p.vals.map(v=>`<td style="${tdStyle}text-align:center;">${escHtml(v)}</td>`).join('') + '</tr>';
+      });
+      rows += `<tr><td colspan="${numCols}" style="border:1px solid #1c1a16;padding:4px 7px;font-family:'PT Serif',Georgia,serif;font-size:9.5pt;font-style:italic;">${rulesRaw ? escHtml(rulesRaw) : '&nbsp;'}</td></tr>`;
+    });
+    const head = `<tr><th style="${thStyle}">Perfil</th>` + statHeaders.map(h=>`<th style="${thStyle}">${h}</th>`).join('') + '</tr>';
+    const table = `<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;width:100%;">${head}${rows}</table>`;
+    const title = `<div style="font-family:Georgia,'Times New Roman',serif;font-size:20pt;font-weight:bold;text-transform:uppercase;letter-spacing:1px;color:#1c1a16;margin-bottom:14px;">Resumen de perfiles de unidades</div>`;
+    const html = wordDocWrapper(title + table);
+    const blob = new Blob(['\ufeff', html], {type:'application/msword'});
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'resumen_perfiles.doc';
+    link.click();
+  }finally{
+    btn.textContent = original;
+    btn.disabled = false;
+  }
+});
+
+/* ---------- sheet type switch (unidad / personaje) ---------- */
+document.querySelectorAll('.type-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.type-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    const type = btn.dataset.type;
+    const unitContent = document.getElementById('unitPanelContent');
+    const notice = document.getElementById('personajePlaceholder');
+    const stage = document.querySelector('.stage');
+    if(type === 'personaje'){
+      unitContent.style.display = 'none';
+      notice.style.display = 'block';
+      stage.style.visibility = 'hidden';
+    }else{
+      unitContent.style.display = '';
+      notice.style.display = 'none';
+      stage.style.visibility = 'visible';
+    }
+  });
+});
+
+/* ---------- resizable panel ---------- */
+(function(){
+  const panel = document.getElementById('panel');
+  const handle = document.getElementById('resizeHandle');
+  let resizing = false;
+  handle.addEventListener('mousedown', ()=>{
+    resizing = true;
+    handle.classList.add('active');
+    document.body.style.userSelect = 'none';
+  });
+  window.addEventListener('mousemove', e=>{
+    if(!resizing) return;
+    const w = Math.min(900, Math.max(300, e.clientX));
+    panel.style.width = w + 'px';
+  });
+  window.addEventListener('mouseup', ()=>{
+    resizing = false;
+    handle.classList.remove('active');
+    document.body.style.userSelect = '';
+  });
+})();
+
+applyPreset('bretonia');
+renderStatRows();
+renderOptRows();
+update();
+sheets = [collectState()];
+currentSheetIndex = 0;
+renderSheetTabs();
+</script>
+</body>
+</html>
