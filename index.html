@@ -1,4 +1,72 @@
 <!DOCTYPE html>
+<!--
+  GENERADOR DE FICHAS DE UNIDAD — Warhammer
+  Versión: 2.1
+
+  CHANGELOG
+  v2.1 - Hoja de personaje: Montura pasa a ir debajo de Equipo, y solo se
+         muestra si tiene algo (antes de meter una montura ya salía vacía).
+         Word con imágenes: las imágenes salen centradas, con menos margen
+         de página, y ya no se fuerza una página por ficha, así que si dos
+         caben en la misma hoja, Word las coloca juntas automáticamente.
+         Los tres botones de exportar caben ahora en una sola línea (con
+         texto más corto). Recuperado el reordenar fichas arrastrando en
+         "Tus fichas" (icono ⠿).
+  v2.0 - Nuevo interruptor "Quitar/Añadir marco" en Vista: controla si la
+         ficha lleva el borde exterior, tanto en la vista previa como en
+         todas las exportaciones (PNG, Word con texto, Word con imágenes).
+         Ajustado el espaciado entre fichas en "Tus fichas" para que se vea
+         más compacto, como antes.
+  v1.9 - Nuevas opciones de exportación: PNG (imágenes sueltas), Word con
+         texto (como antes) y Word con imágenes (todas las fichas marcadas
+         pegadas como imágenes dentro de un único documento, una tras otra).
+         Se ha quitado la exportación a PDF. Al combinar varias fichas, los
+         personajes van siempre primero y las unidades después.
+         Añadidas de verdad las hojas de personaje (antes solo un aviso de
+         "próximamente"): son iguales a las de unidad salvo que no llevan
+         "Tamaño de la unidad" y en su lugar tienen una lista de "Montura"
+         (nombre + puntos, se pueden añadir varias). El interruptor de
+         arriba cambia el tipo de la ficha actual; "+ Nueva ficha" crea una
+         ficha del tipo que esté seleccionado en ese momento.
+  v1.8 - "Exportar fichas" ya no es una sección aparte: la casilla de
+         selección para exportar vive ahora en cada fila de "Tus fichas",
+         junto con marcar/desmarcar todas y los botones de Word/PDF.
+  v1.7 - Reordenado el panel: Guardar/cargar, Vista, Escudo del ejército,
+         Tus fichas y Exportar fichas ahora van arriba del todo, en ese
+         orden, seguidos del resto de secciones como antes. Eliminado el
+         botón "Descargar como imagen (PNG)" (ya no es necesario).
+  v1.6 - Nuevo control de brillo para la ilustración (más clara o más
+         oscura), aplicado en la vista previa, el PNG, el PDF y el Word.
+  v1.5 - Nueva exportación con lista de comprobación: eliges qué fichas
+         exportar (marcar/desmarcar todas), y a qué formato, Word o PDF.
+         Si marcas varias, se descargan juntas en un .zip (un archivo por
+         ficha); si solo marcas una, se descarga directamente. Sustituye a
+         los antiguos botones de "una ficha" / "todas las fichas".
+  v1.4 - Arreglo: la generación de imágenes con IA usaba un endpoint que
+         requiere autenticación y fallaba siempre; ahora usa el endpoint
+         clásico y realmente gratuito de Pollinations.ai, y muestra las
+         imágenes que sí se generen aunque alguna falle.
+  v1.3 - Nueva opción para generar imágenes de referencia con IA a partir del
+         nombre de la unidad (fondo blanco, 3 variantes), usando el servicio
+         externo gratuito Pollinations.ai (sin clave API). Experimental.
+  v1.2 - El título y la barra gris siempre quedan por delante de la ilustración,
+         aunque la subas por encima del borde del texto (antes se veía la
+         imagen tapando esa zona).
+  v1.1 - La ilustración se puede subir un poco por encima del borde superior
+         del texto (hasta 40px), y empieza colocada así por defecto.
+  v1.0 - Primera versión "estable": fichas múltiples por archivo, perfiles de
+         características, grupo de mando, opciones, reglas especiales, escudo
+         de ejército único, ilustración de tamaño y posición libres (nunca se
+         recorta, se puede colocar delante o detrás del texto), vista y
+         exportación en blanco y negro, exportación a PNG y a Word (ficha
+         suelta, documento con todas las fichas en páginas separadas, y
+         resumen de perfiles), guardar/cargar todo el archivo en .json con
+         imágenes comprimidas automáticamente, panel redimensionable.
+
+  Para versionar de verdad (y poder volver atrás con garantías), usa Git:
+  haz un commit cada vez que subas una versión nueva a tu repositorio, y
+  opcionalmente crea un tag (v1.0, v1.1...) para marcar los hitos importantes.
+-->
 <html lang="es">
 <head>
 <meta charset="UTF-8">
@@ -7,6 +75,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=PT+Serif:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>
   :root{
     --paper:#ffffff;
@@ -132,6 +201,21 @@
   .row2{display:flex;gap:8px;}
   .row2 > div{flex:1;}
   .hint{font-family:'Trebuchet MS',sans-serif;font-size:10.5px;color:var(--muted);margin-top:4px;}
+  #illuGenResults{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;min-height:0;}
+  .illu-gen-thumb{
+    width:76px;height:101px;
+    object-fit:cover;
+    border-radius:4px;
+    border:1px solid #cfc8b4;
+    cursor:pointer;
+    background:#eee;
+  }
+  .illu-gen-thumb:hover{border-color:var(--accent);}
+  .illu-gen-loading{
+    font-family:'Trebuchet MS',sans-serif;
+    font-size:10.5px;
+    color:var(--muted);
+  }
 
   .preset-row{display:flex;gap:6px;flex-wrap:wrap;}
   .preset-btn{
@@ -237,12 +321,15 @@
   }
   .opt-row.dragging{opacity:.4;}
   .opt-row input, .rule-row input{flex:1;}
+  .montura-row{display:flex;gap:6px;margin-bottom:5px;align-items:center;}
+  .montura-row input.montura-name{flex:2;}
+  .montura-row input.montura-pts{flex:1;}
   .drag-dot{font-family:monospace;color:#bbb;font-size:12px;padding:0 2px;user-select:none;}
 
-  .sheet-tabs{display:flex;flex-direction:column;gap:4px;max-height:230px;overflow-y:auto;}
+  .sheet-tabs{display:flex;flex-direction:column;gap:2px;max-height:230px;overflow-y:auto;}
   .sheet-tab{
     display:flex;align-items:center;gap:6px;
-    padding:6px 7px;
+    padding:4px 7px;
     border:1px solid #ddd6c4;
     border-radius:5px;
     background:#fff;
@@ -251,8 +338,10 @@
     font-size:11.5px;
   }
   .sheet-tab.active{border-color:var(--accent);background:#faf3ef;}
+  .sheet-tab.dragging{opacity:.4;}
   .sheet-tab-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .sheet-tab .icon-btn, .sheet-tab .del-btn{width:20px;height:20px;font-size:10.5px;flex-shrink:0;}
+  .sheet-tab input[type=checkbox]{flex-shrink:0;cursor:pointer;}
 
   .queue-list{list-style:none;margin:6px 0;padding:0;}
   .queue-list li{
@@ -287,9 +376,16 @@
     cursor:pointer;
     color:#fff;
   }
-  #btnPng{background:#33322c;}
-  #btnDoc{background:var(--accent);}
-  #btnDocAll{background:#4a5a3a;}
+  .export-btn-sm{
+    flex:1;
+    min-width:0;
+    padding:9px 4px;
+    font-size:10.5px;
+    text-align:center;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
   #btnDocSummary{background:#5a4a2a;}
   .export-btn:hover{filter:brightness(1.12);}
   .export-btn:disabled{opacity:.6;cursor:default;}
@@ -350,6 +446,7 @@
     transition:filter .15s ease;
   }
   #card.grayscale-view{filter:grayscale(1);}
+  #card.no-frame{border-color:transparent;}
   .title{
     font-size:28px;
     font-weight:700;
@@ -357,6 +454,8 @@
     text-transform:uppercase;
     margin:0 0 10px;
     font-family:'Cinzel','Georgia',serif;
+    position:relative;
+    z-index:2;
   }
   .subbar{
     background:var(--bar-gray);
@@ -369,6 +468,8 @@
     margin-bottom:16px;
     border-top:1px solid var(--bar-border);
     border-bottom:1px solid var(--bar-border);
+    position:relative;
+    z-index:2;
   }
   .subbar .logo{
     width:50px;height:50px;
@@ -392,17 +493,14 @@
     white-space:nowrap;
   }
   .content-wrap{
-    display:flex;
-    gap:18px;
-    align-items:flex-start;
+    position:relative;
+    min-height:380px;
   }
   .left-col{
-    width:68%;
+    width:64%;
     min-width:0;
-  }
-  .right-col{
-    width:32%;
-    flex-shrink:0;
+    position:relative;
+    z-index:2;
   }
   table.stats{
     border-collapse:collapse;
@@ -432,32 +530,38 @@
   ul.options{margin:0 0 10px;padding-left:18px;font-size:13px;line-height:1.55;}
   ul.options li{margin-bottom:2px;}
   .rules-text{font-style:italic;font-size:13px;}
-  .illustration{
-    width:100%;
-    height:300px;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    overflow:hidden;
-    border-radius:4px;
-    border:1px solid transparent;
-    background:transparent;
+  .illu-layer{
+    position:absolute;
+    top:0; left:0; right:0; bottom:0;
+    pointer-events:none;
+    z-index:1;
   }
+  .illustration{
+    position:absolute;
+    touch-action:none;
+  }
+  .illustration.has-image{cursor:grab; pointer-events:auto;}
+  .illustration.has-image.dragging{cursor:grabbing;}
   .illustration img{
     width:100%;
-    height:100%;
-    object-fit:fill;
+    height:auto;
     display:block;
+    pointer-events:none;
+    user-select:none;
+    -webkit-user-drag:none;
   }
   .illu-ph{
-    width:100%;
-    height:100%;
+    width:249px;
+    height:340px;
     display:flex;align-items:center;justify-content:center;
     font-family:'Trebuchet MS',sans-serif;
     font-size:11px;
     color:#a49c86;
     text-align:center;
     padding:10px;
+    border:1px dashed #cfc8b4;
+    background:rgba(255,255,255,.7);
+    border-radius:4px;
   }
   @media print{
     body{background:#fff !important; filter:grayscale(1) !important;}
@@ -477,7 +581,7 @@
 <body>
 
 <div class="panel" id="panel">
-  <h1>Generador de fichas</h1>
+  <h1>Generador de fichas <span style="opacity:.5;font-weight:normal;">· v2.1</span></h1>
   <div class="sub">Rellena los datos y la ficha se genera a la derecha.</div>
 
   <div class="type-switch" id="typeSwitch">
@@ -485,17 +589,23 @@
     <button type="button" class="type-btn" data-type="personaje">🧙 Hoja de personaje</button>
   </div>
 
-  <div id="personajePlaceholder" class="placeholder-box" style="display:none;">
-    Las hojas de personaje llegarán próximamente.<br>Mientras tanto puedes seguir creando hojas de unidad.
-  </div>
-
   <div id="unitPanelContent">
 
   <fieldset>
-    <legend>Tus fichas</legend>
-    <div class="sheet-tabs" id="sheetTabs"></div>
-    <button class="small-btn" id="addSheetBtn" style="margin-top:8px;">+ Nueva ficha</button>
-    <div class="hint">Cambia entre fichas haciendo clic en ellas. ⧉ duplica, 🗑 elimina.</div>
+    <legend>Guardar / cargar todas las fichas</legend>
+    <div class="file-row">
+      <button class="btnlike" id="btnSaveJson">💾 Guardar (.json)</button>
+      <label class="btnlike" for="loadJsonFile">📂 Cargar (.json)</label>
+      <input type="file" id="loadJsonFile" accept="application/json,.json">
+    </div>
+    <div class="hint">Guarda todas tus fichas (perfiles, opciones e imágenes) juntas en un único archivo. Si tu navegador lo permite, te dejará elegir dónde guardarlo.</div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Vista</legend>
+    <button class="small-btn" id="btnGrayscale" style="margin:0;">🎨 Ver a color</button>
+    <button class="small-btn" id="btnFrame" style="margin:0;">🖼️ Quitar marco</button>
+    <div class="hint">Cambia la vista previa y afecta también a lo que se exporta (imagen y Word).</div>
   </fieldset>
 
   <fieldset>
@@ -506,9 +616,20 @@
   </fieldset>
 
   <fieldset>
-    <legend>Vista</legend>
-    <button class="small-btn" id="btnGrayscale" style="margin:0;">🎨 Ver a color</button>
-    <div class="hint">Cambia la vista previa y afecta también a lo que se exporta (imagen y Word).</div>
+    <legend>Tus fichas</legend>
+    <div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap;">
+      <button class="tiny-btn" id="addSheetBtn" style="margin-top:0;">+ Nueva ficha</button>
+      <button class="tiny-btn" id="exportSelectAllBtn">Marcar todas</button>
+      <button class="tiny-btn" id="exportSelectNoneBtn">Desmarcar todas</button>
+    </div>
+    <div class="sheet-tabs" id="sheetTabs"></div>
+    <div class="hint">Haz clic en una ficha para editarla. ⧉ duplica, 🗑 elimina. La casilla marca si se incluye al exportar.</div>
+    <div style="display:flex;gap:5px;margin-top:10px;">
+      <button class="export-btn export-btn-sm" id="btnExportPng" style="background:#33322c;" title="Exportar como imágenes PNG sueltas">PNG</button>
+      <button class="export-btn export-btn-sm" id="btnExportWord" style="background:var(--accent);" title="Exportar como Word con texto editable">Word texto</button>
+      <button class="export-btn export-btn-sm" id="btnExportWordImages" style="background:#4a5a3a;" title="Exportar como Word con las fichas pegadas como imágenes">Word imág.</button>
+    </div>
+    <div class="hint">PNG y Word con texto: si hay varias marcadas, se descargan juntas en un .zip (un archivo por ficha); si solo hay una, directa. Word con imágenes: siempre genera un único documento con todas las fichas marcadas pegadas como imágenes (los personajes van primero, luego las unidades).</div>
   </fieldset>
 
   <fieldset>
@@ -522,18 +643,37 @@
         <label>Puntos por miniatura</label>
         <input type="number" id="pts" value="20">
       </div>
-      <div>
+      <div id="sizeFieldWrap">
         <label>Tamaño de la unidad</label>
         <input type="text" id="size" value="5-15">
       </div>
     </div>
   </fieldset>
 
+  <fieldset id="monturaFieldset" style="display:none;">
+    <legend>Montura</legend>
+    <div id="monturaRows"></div>
+    <button class="small-btn" id="addMonturaBtn">+ Añadir montura</button>
+    <div class="hint">Añade las monturas disponibles para este personaje, con su coste en puntos.</div>
+  </fieldset>
+
   <fieldset>
     <legend>Ilustración</legend>
     <label>Imagen de la miniatura / unidad</label>
     <input type="file" id="illuFile" accept="image/*">
-    <div class="hint">Tamaño recomendado: 600 × 800&nbsp;px (formato vertical, relación 3:4). El recuadro es fijo y la imagen se estira para llenarlo por completo, así que si usas esa proporción se verá sin deformarse. La imagen se comprime automáticamente al subirla para que el archivo pese poco.</div>
+    <div class="hint">Tamaño recomendado: 600 × 800&nbsp;px (formato vertical, relación 3:4). La imagen nunca se recorta, siempre se ve entera. Se comprime automáticamente al subirla para que el archivo pese poco.</div>
+    <label>Tamaño: <span id="illuZoomLabel">34%</span> del ancho de la ficha</label>
+    <input type="range" id="illuZoomRange" min="10" max="90" step="2" value="34" style="width:100%;">
+    <label style="margin-top:8px;">Brillo: <span id="illuBrightnessLabel">100%</span></label>
+    <input type="range" id="illuBrightnessRange" min="40" max="180" step="5" value="100" style="width:100%;">
+    <button class="tiny-btn" id="illuResetBtn" style="margin-top:6px;">Restablecer encuadre</button>
+    <div class="hint">Arrastra la imagen libremente por toda la ficha (incluso encima del texto) para colocarla donde quieras.</div>
+
+    <label style="margin-top:12px;">O genera imágenes de referencia con IA</label>
+    <input type="text" id="illuPromptInput" placeholder="Ej. alimaña skaven con daga, deja vacío para usar el nombre de la ficha">
+    <button class="small-btn" id="illuGenBtn" style="margin-top:6px;">🎲 Generar 3 variantes</button>
+    <div id="illuGenResults"></div>
+    <div class="hint">Usa un servicio externo gratuito (Pollinations.ai) para generar bocetos con fondo blanco a partir del texto. Es experimental: puede tardar unos segundos o fallar alguna vez. Haz clic en una imagen para usarla en esta ficha.</div>
   </fieldset>
 
   <fieldset>
@@ -590,20 +730,7 @@
     <textarea id="rules">Voto del Caballero, Purasangre</textarea>
   </fieldset>
 
-  <fieldset>
-    <legend>Guardar / cargar todas las fichas</legend>
-    <div class="file-row">
-      <button class="btnlike" id="btnSaveJson">💾 Guardar (.json)</button>
-      <label class="btnlike" for="loadJsonFile">📂 Cargar (.json)</label>
-      <input type="file" id="loadJsonFile" accept="application/json,.json">
-    </div>
-    <div class="hint">Guarda todas tus fichas (perfiles, opciones e imágenes) juntas en un único archivo. Si tu navegador lo permite, te dejará elegir dónde guardarlo.</div>
-  </fieldset>
-
   <div class="export-bar">
-    <button class="export-btn" id="btnPng">⬇ Descargar como imagen (PNG)</button>
-    <button class="export-btn" id="btnDoc">⬇ Descargar esta ficha para Word (.doc)</button>
-    <button class="export-btn" id="btnDocAll">⬇ Descargar Word con todas tus fichas</button>
     <button class="export-btn" id="btnDocSummary">📋 Generar resumen de perfiles de unidades</button>
   </div>
 
@@ -623,15 +750,16 @@
     <div class="content-wrap">
       <div class="left-col">
         <table class="stats" id="statsTable"></table>
-        <div class="field"><b>Tamaño de la unidad:</b> <span id="outSize">5-15</span></div>
+        <div class="field" id="outSizeWrap"><b>Tamaño de la unidad:</b> <span id="outSize">5-15</span></div>
         <div class="field"><b>Equipo:</b> <span id="outEquipo"></span></div>
+        <div class="field" id="outMonturaWrap" style="display:none;"><b>Montura:</b> <span id="outMontura"></span></div>
         <div class="opt-title" id="outOptTitle">Opciones:</div>
         <ul class="options" id="outOptions"></ul>
         <div class="field" id="outCmdWrap"><b>Grupo de mando:</b> <span id="outCmd"></span></div>
         <div class="rules-title">Reglas especiales:</div>
         <div class="rules-text" id="outRules"></div>
       </div>
-      <div class="right-col">
+      <div class="illu-layer">
         <div class="illustration" id="outIllu">
           <div class="illu-ph">Sube una ilustración<br>en el panel izquierdo<br><span style="opacity:.6;font-size:9.5px;">(recomendado 600×800 px)</span></div>
         </div>
@@ -658,10 +786,19 @@ let options = [
 ];
 let armyLogoData = null;
 let illuData = null;
+let illuWidthPct = 34;
+let illuPosX = null;
+let illuPosY = null;
+let illuBrightness = 100;
+const CONTENT_W = 708; /* ancho útil de la ficha: 760px de tarjeta menos 26px de margen a cada lado */
+const ILLU_DEFAULT_W_PCT = 34;
 let currentPreset = 'bretonia';
 let sheets = [];
 let currentSheetIndex = -1;
 let grayscaleMode = true;
+let showFrame = true;
+let sheetType = 'unidad'; /* 'unidad' o 'personaje' */
+let monturas = []; /* solo se usa en hojas de personaje: [{name, pts}] */
 
 const PRESETS = {
   bretonia: {label:'Bretonia', bar:'#d9d5c6', barBorder:'#7d795f', accent:'#7a1f1f'},
@@ -694,6 +831,19 @@ document.getElementById('btnGrayscale').addEventListener('click', ()=>{
   }
 });
 
+document.getElementById('btnFrame').addEventListener('click', ()=>{
+  showFrame = !showFrame;
+  const btn = document.getElementById('btnFrame');
+  const card = document.getElementById('card');
+  if(showFrame){
+    card.classList.remove('no-frame');
+    btn.textContent = '🖼️ Quitar marco';
+  }else{
+    card.classList.add('no-frame');
+    btn.textContent = '🖼️ Añadir marco';
+  }
+});
+
 function grayscaleImageData(dataUrl){
   return new Promise(resolve=>{
     if(!dataUrl){ resolve(dataUrl); return; }
@@ -710,6 +860,38 @@ function grayscaleImageData(dataUrl){
         for(let i=0;i<d.length;i+=4){
           const gray = 0.299*d[i] + 0.587*d[i+1] + 0.114*d[i+2];
           d[i]=d[i+1]=d[i+2]=gray;
+        }
+        ctx.putImageData(id, 0, 0);
+        resolve(c.toDataURL('image/png'));
+      }catch(err){
+        resolve(dataUrl);
+      }
+    };
+    img.onerror = ()=> resolve(dataUrl);
+    img.src = dataUrl;
+  });
+}
+
+/* Word ignora el filter:brightness() de CSS, así que para esa exportación
+   "horneamos" el brillo directamente en los píxeles de la imagen. */
+function adjustImageBrightness(dataUrl, brightnessPct){
+  return new Promise(resolve=>{
+    if(!dataUrl || !brightnessPct || brightnessPct === 100){ resolve(dataUrl); return; }
+    const img = new Image();
+    img.onload = ()=>{
+      const c = document.createElement('canvas');
+      c.width = img.naturalWidth || 1;
+      c.height = img.naturalHeight || 1;
+      const ctx = c.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      try{
+        const id = ctx.getImageData(0, 0, c.width, c.height);
+        const d = id.data;
+        const factor = brightnessPct / 100;
+        for(let i=0;i<d.length;i+=4){
+          d[i] = Math.max(0, Math.min(255, d[i]*factor));
+          d[i+1] = Math.max(0, Math.min(255, d[i+1]*factor));
+          d[i+2] = Math.max(0, Math.min(255, d[i+2]*factor));
         }
         ctx.putImageData(id, 0, 0);
         resolve(c.toDataURL('image/png'));
@@ -793,6 +975,32 @@ function renderOptRows(){
   addDragHandlers(box, '.opt-row', options, ()=>{ renderOptRows(); update(); });
 }
 
+function renderMonturaRows(){
+  const box = document.getElementById('monturaRows');
+  if(!box) return;
+  box.innerHTML = '';
+  monturas.forEach((m,i)=>{
+    const row = document.createElement('div');
+    row.className = 'montura-row';
+    row.innerHTML = `<input class="montura-name" placeholder="Nombre de la montura" value="${escAttr(m.name||'')}" data-mi="${i}">` +
+      `<input class="montura-pts" type="number" placeholder="Puntos" value="${escAttr(m.pts||'')}" data-mp="${i}">` +
+      `<button class="del-btn" data-mdel="${i}" title="Eliminar montura">🗑</button>`;
+    box.appendChild(row);
+  });
+  box.querySelectorAll('[data-mi]').forEach(inp=>{
+    inp.addEventListener('input', e=>{ monturas[e.target.dataset.mi].name = e.target.value; update(); });
+  });
+  box.querySelectorAll('[data-mp]').forEach(inp=>{
+    inp.addEventListener('input', e=>{ monturas[e.target.dataset.mp].pts = e.target.value; update(); });
+  });
+  box.querySelectorAll('[data-mdel]').forEach(btn=>{
+    btn.addEventListener('click', e=>{
+      monturas.splice(parseInt(e.target.dataset.mdel),1);
+      renderMonturaRows(); update();
+    });
+  });
+}
+
 function addDragHandlers(box, selector, arr, onDone){
   let dragIndex = null;
   box.querySelectorAll(selector).forEach(row=>{
@@ -833,6 +1041,13 @@ function grupoMandoText(musico, portaestandarte, campeonNombre, campeonPts){
   return parts.join(', ');
 }
 
+function monturaText(list){
+  return (list||[]).filter(m => m.name && m.name.trim()).map(m=>{
+    const pts = (m.pts !== undefined && m.pts !== null && m.pts !== '') ? ` (+${m.pts})` : '';
+    return `${m.name.trim()}${pts}`;
+  }).join(', ');
+}
+
 function buildStatsTableInnerHtml(profs){
   let thead = '<tr><th></th>' + statHeaders.map(h=>`<th>${h}</th>`).join('') + '</tr>';
   let rows = profs.map(p=>{
@@ -845,8 +1060,20 @@ function update(){
   document.getElementById('outTitle').textContent = document.getElementById('title').value;
   document.getElementById('outUname').textContent = document.getElementById('uname').value;
   document.getElementById('outPts').textContent = 'puntos por miniatura: ' + document.getElementById('pts').value;
-  document.getElementById('outSize').textContent = document.getElementById('size').value;
   document.getElementById('outEquipo').textContent = document.getElementById('equipo').value;
+
+  document.getElementById('sizeFieldWrap').style.display = sheetType === 'personaje' ? 'none' : '';
+  document.getElementById('monturaFieldset').style.display = sheetType === 'personaje' ? '' : 'none';
+  if(sheetType === 'personaje'){
+    document.getElementById('outSizeWrap').style.display = 'none';
+    const mText = monturaText(monturas);
+    document.getElementById('outMontura').textContent = mText;
+    document.getElementById('outMonturaWrap').style.display = mText ? '' : 'none';
+  }else{
+    document.getElementById('outSize').textContent = document.getElementById('size').value;
+    document.getElementById('outSizeWrap').style.display = '';
+    document.getElementById('outMonturaWrap').style.display = 'none';
+  }
 
   const rulesRaw = document.getElementById('rules').value.split(',').map(s=>s.trim()).filter(Boolean);
   document.getElementById('outRules').textContent = rulesRaw.join(', ');
@@ -872,8 +1099,32 @@ function update(){
   const logoBox = document.getElementById('outLogo');
   logoBox.innerHTML = armyLogoData ? `<img src="${armyLogoData}">` : '';
 
+  const illuLayer = document.querySelector('.illu-layer');
   const illuBox = document.getElementById('outIllu');
-  illuBox.innerHTML = illuData ? `<img src="${illuData}">` : '<div class="illu-ph">Sube una ilustración<br>en el panel izquierdo<br><span style="opacity:.6;font-size:9.5px;">(recomendado 600×800 px)</span></div>';
+  if(illuData){
+    illuBox.innerHTML = `<img src="${illuData}" style="filter:brightness(${illuBrightness}%);">`;
+    illuBox.classList.add('has-image');
+    const w = illuWidthPx();
+    illuBox.style.width = w + 'px';
+    ensureIlluDefaultPos(illuLayer ? illuLayer.clientHeight : 0);
+    illuBox.style.left = (illuPosX || 0) + 'px';
+    illuBox.style.top = (illuPosY || 0) + 'px';
+    const imgEl = illuBox.querySelector('img');
+    if(imgEl && !imgEl.complete){
+      imgEl.addEventListener('load', ()=>{
+        clampIlluPos(illuLayer ? illuLayer.clientHeight : 0);
+        illuBox.style.left = (illuPosX || 0) + 'px';
+        illuBox.style.top = (illuPosY || 0) + 'px';
+      }, {once:true});
+    }
+  }else{
+    illuBox.innerHTML = '<div class="illu-ph">Sube una ilustración<br>en el panel izquierdo<br><span style="opacity:.6;font-size:9.5px;">(recomendado 600×800 px)</span></div>';
+    illuBox.classList.remove('has-image');
+    illuBox.style.width = 'auto';
+    illuBox.style.left = Math.max(0, CONTENT_W - 249) + 'px';
+    illuBox.style.top = '0px';
+  }
+  syncIlluZoomUI();
 
   syncCurrentSheet();
 }
@@ -885,6 +1136,11 @@ function update(){
 document.getElementById('addOpt').addEventListener('click', ()=>{
   options.push('Nueva opción');
   renderOptRows(); update();
+});
+
+document.getElementById('addMonturaBtn').addEventListener('click', ()=>{
+  monturas.push({name:'Nueva montura', pts:''});
+  renderMonturaRows(); update();
 });
 
 /* Redimensiona y recodifica una imagen para que el .json pese mucho menos,
@@ -935,9 +1191,167 @@ document.getElementById('logoFile').addEventListener('change', function(){
   this.value = '';
 });
 document.getElementById('illuFile').addEventListener('change', function(){
-  handleImageUpload(this, 900, 1200, 'image/jpeg', 0.85, data => { illuData = data; update(); });
+  handleImageUpload(this, 900, 1200, 'image/jpeg', 0.85, data => {
+    illuData = data;
+    illuWidthPct = ILLU_DEFAULT_W_PCT;
+    illuPosX = null; illuPosY = null; /* se recalcula la posición por defecto al renderizar */
+    illuBrightness = 100;
+    update();
+  });
   this.value = '';
 });
+
+/* ---------- generar imágenes de referencia con IA (servicio externo gratuito, sin clave) ---------- */
+const ILLU_GEN_STYLES = [
+  'ilustración digital detallada', 'pintura al óleo', 'estilo acuarela',
+  'arte conceptual de fantasía', 'estilo grabado a tinta', 'render 3D estilizado',
+  'arte de libro de reglas de rol'
+];
+
+document.getElementById('illuGenBtn').addEventListener('click', async ()=>{
+  const btn = document.getElementById('illuGenBtn');
+  const resultsBox = document.getElementById('illuGenResults');
+  const baseText = document.getElementById('illuPromptInput').value.trim() || document.getElementById('title').value || 'criatura de fantasía';
+  const original = btn.textContent;
+  btn.textContent = 'Generando (puede tardar unos segundos)...';
+  btn.disabled = true;
+  resultsBox.innerHTML = '<div class="illu-gen-loading">Generando 3 variantes con un servicio externo gratuito...</div>';
+  try{
+    const attempts = await Promise.allSettled([0,1,2].map(async ()=>{
+      const style = ILLU_GEN_STYLES[Math.floor(Math.random()*ILLU_GEN_STYLES.length)];
+      const seed = Math.floor(Math.random()*1000000);
+      const prompt = `${baseText}, ${style}, fondo blanco liso, sin sombras, iluminación de estudio, ilustración de miniatura de wargame de fantasía, alta calidad`;
+      const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=512&height=683&seed=${seed}&nologo=true&model=flux`;
+      const resp = await fetch(url);
+      if(!resp.ok) throw new Error('HTTP ' + resp.status);
+      const blob = await resp.blob();
+      if(!blob.type.startsWith('image/')) throw new Error('respuesta no es una imagen (' + blob.type + ')');
+      return blob;
+    }));
+    resultsBox.innerHTML = '';
+    const okBlobs = attempts.filter(a => a.status === 'fulfilled').map(a => a.value);
+    const errors = attempts.filter(a => a.status === 'rejected').map(a => a.reason && a.reason.message);
+    okBlobs.forEach(blob=>{
+      const objUrl = URL.createObjectURL(blob);
+      const thumb = document.createElement('img');
+      thumb.src = objUrl;
+      thumb.className = 'illu-gen-thumb';
+      thumb.title = 'Haz clic para usar esta imagen';
+      thumb.addEventListener('click', async ()=>{
+        const dataUrl = await compressImageFile(blob, 900, 1200, 'image/jpeg', 0.85);
+        illuData = dataUrl;
+        illuWidthPct = ILLU_DEFAULT_W_PCT;
+        illuPosX = null; illuPosY = null;
+        illuBrightness = 100;
+        update();
+      });
+      resultsBox.appendChild(thumb);
+    });
+    if(okBlobs.length === 0){
+      resultsBox.innerHTML = '<div class="illu-gen-loading">No se ha podido generar ninguna imagen (' + (errors[0] || 'error desconocido') + '). Inténtalo de nuevo en unos segundos.</div>';
+    }else if(errors.length){
+      resultsBox.insertAdjacentHTML('beforeend', '<div class="illu-gen-loading" style="width:100%;">' + okBlobs.length + ' de 3 generadas; ' + errors.length + ' fallaron.</div>');
+    }
+  }catch(err){
+    console.error(err);
+    resultsBox.innerHTML = '';
+    alert('No se han podido generar imágenes ahora mismo (' + (err && err.message ? err.message : 'error desconocido') + '). Es un servicio externo gratuito y puede fallar o tardar; inténtalo de nuevo en unos segundos.');
+  }finally{
+    btn.textContent = original;
+    btn.disabled = false;
+  }
+});
+
+/* ---------- ilustración: tamaño y posición libres, siempre entera ---------- */
+function syncIlluZoomUI(){
+  const range = document.getElementById('illuZoomRange');
+  const label = document.getElementById('illuZoomLabel');
+  if(range) range.value = illuWidthPct;
+  if(label) label.textContent = illuWidthPct + '%';
+  const bRange = document.getElementById('illuBrightnessRange');
+  const bLabel = document.getElementById('illuBrightnessLabel');
+  if(bRange) bRange.value = illuBrightness;
+  if(bLabel) bLabel.textContent = illuBrightness + '%';
+}
+
+function illuWidthPx(){
+  return Math.round(CONTENT_W * illuWidthPct / 100);
+}
+
+/* Si no hay posición guardada (imagen nueva o ficha recién cargada), la coloca
+   por defecto arriba a la derecha, un poco por encima del borde del texto,
+   como en el diseño original. */
+const ILLU_MIN_Y = -40; /* cuánto se puede subir por encima del borde del texto */
+
+function ensureIlluDefaultPos(layerH){
+  const w = illuWidthPx();
+  if(illuPosX === null || illuPosX === undefined) illuPosX = Math.max(0, CONTENT_W - w);
+  if(illuPosY === null || illuPosY === undefined) illuPosY = -20;
+  clampIlluPos(layerH);
+}
+
+function clampIlluPos(layerH){
+  const w = illuWidthPx();
+  const img = document.querySelector('#outIllu img');
+  const h = img && img.naturalWidth ? w * (img.naturalHeight / img.naturalWidth) : w;
+  const maxX = Math.max(0, CONTENT_W - w);
+  const maxY = Math.max(ILLU_MIN_Y, (layerH || 0) - h);
+  illuPosX = Math.max(0, Math.min(maxX, illuPosX || 0));
+  illuPosY = Math.max(ILLU_MIN_Y, Math.min(maxY, illuPosY || 0));
+}
+
+document.getElementById('illuZoomRange').addEventListener('input', function(){
+  illuWidthPct = parseInt(this.value, 10);
+  const layer = document.querySelector('.illu-layer');
+  clampIlluPos(layer ? layer.clientHeight : 0);
+  syncIlluZoomUI();
+  update();
+});
+
+document.getElementById('illuBrightnessRange').addEventListener('input', function(){
+  illuBrightness = parseInt(this.value, 10);
+  syncIlluZoomUI();
+  update();
+});
+
+document.getElementById('illuResetBtn').addEventListener('click', ()=>{
+  illuWidthPct = ILLU_DEFAULT_W_PCT;
+  illuPosX = null; illuPosY = null;
+  illuBrightness = 100;
+  update();
+});
+
+(function(){
+  const box = document.getElementById('outIllu');
+  let dragging = false, startX = 0, startY = 0, startPosX = 0, startPosY = 0;
+
+  box.addEventListener('pointerdown', e=>{
+    if(!illuData) return;
+    dragging = true;
+    startX = e.clientX; startY = e.clientY;
+    startPosX = illuPosX || 0; startPosY = illuPosY || 0;
+    box.classList.add('dragging');
+    box.setPointerCapture(e.pointerId);
+  });
+  box.addEventListener('pointermove', e=>{
+    if(!dragging) return;
+    const dx = e.clientX - startX, dy = e.clientY - startY;
+    illuPosX = startPosX + dx;
+    illuPosY = startPosY + dy;
+    const layer = box.closest('.illu-layer');
+    clampIlluPos(layer ? layer.clientHeight : 0);
+    box.style.left = illuPosX + 'px';
+    box.style.top = illuPosY + 'px';
+  });
+  function endDrag(){
+    if(!dragging) return;
+    dragging = false;
+    box.classList.remove('dragging');
+    syncCurrentSheet();
+  }
+  box.addEventListener('pointerup', endDrag);
+  box.addEventListener('pointercancel', endDrag);
+})();
 
 /* ---------- collect / apply state ---------- */
 function collectState(){
@@ -955,7 +1369,10 @@ function collectState(){
     statProfiles: JSON.parse(JSON.stringify(statProfiles)),
     options: JSON.parse(JSON.stringify(options)),
     illuData,
-    preset: currentPreset
+    illuWidthPct, illuPosX, illuPosY, illuBrightness,
+    preset: currentPreset,
+    sheetType,
+    monturas: JSON.parse(JSON.stringify(monturas))
   };
 }
 
@@ -983,19 +1400,28 @@ function applyState(s){
     statProfiles = [];
   }
   options = s.options || [];
+  monturas = s.monturas || [];
+  sheetType = s.sheetType === 'personaje' ? 'personaje' : 'unidad';
+  syncTypeSwitchUI();
   if(!armyLogoData && s.logoData) armyLogoData = s.logoData; /* migration from old per-sheet logo */
   illuData = s.illuData || null;
+  illuWidthPct = (s.illuWidthPct != null) ? s.illuWidthPct : ILLU_DEFAULT_W_PCT;
+  illuBrightness = (s.illuBrightness != null) ? s.illuBrightness : 100;
+  illuPosX = (s.illuPosX != null) ? s.illuPosX : null;
+  illuPosY = (s.illuPosY != null) ? s.illuPosY : null;
   if(s.preset && PRESETS[s.preset]) applyPreset(s.preset);
-  renderStatRows(); renderOptRows(); update();
+  renderStatRows(); renderOptRows(); renderMonturaRows(); update();
 }
 
 /* ---------- multi-sheet management ---------- */
-function makeBlankState(){
+function makeBlankState(type){
+  const t = type === 'personaje' ? 'personaje' : 'unidad';
   return {
     title:'Nueva ficha', uname:'Nueva ficha', pts:'', size:'', equipo:'', rules:'',
     cmdMusico:'', cmdPortaestandarte:'', cmdCampeonNombre:'', cmdCampeonPts:'',
     statProfiles:[{name:'Nuevo perfil', vals:['0','0','0','0','0','0','0','0','0']}],
-    options:[], illuData:null, preset:'bretonia'
+    options:[], illuData:null, illuWidthPct:ILLU_DEFAULT_W_PCT, illuPosX:null, illuPosY:null, illuBrightness:100, preset:'bretonia',
+    sheetType:t, monturas:[]
   };
 }
 
@@ -1003,24 +1429,64 @@ function syncCurrentSheet(){
   if(currentSheetIndex >= 0 && currentSheetIndex < sheets.length){
     sheets[currentSheetIndex] = collectState();
     const tab = document.querySelector(`.sheet-tab[data-idx="${currentSheetIndex}"] .sheet-tab-name`);
-    if(tab) tab.textContent = sheets[currentSheetIndex].title || 'Sin título';
+    if(tab){
+      const icon = sheets[currentSheetIndex].sheetType === 'personaje' ? '🧙' : '📜';
+      tab.textContent = icon + ' ' + (sheets[currentSheetIndex].title || 'Sin título');
+    }
   }
+}
+
+let exportChecks = [];
+
+let sheetDragIndex = null;
+
+function reorderSheets(fromIndex, toIndex){
+  if(fromIndex === toIndex) return;
+  const activeRef = sheets[currentSheetIndex];
+  const movedSheet = sheets.splice(fromIndex, 1)[0];
+  sheets.splice(toIndex, 0, movedSheet);
+  const movedCheck = exportChecks.splice(fromIndex, 1)[0];
+  exportChecks.splice(toIndex, 0, movedCheck);
+  currentSheetIndex = sheets.indexOf(activeRef);
+  renderSheetTabs();
 }
 
 function renderSheetTabs(){
   const box = document.getElementById('sheetTabs');
   if(!box) return;
+  while(exportChecks.length < sheets.length) exportChecks.push(true);
+  exportChecks.length = sheets.length;
   box.innerHTML = '';
   sheets.forEach((sh, i)=>{
     const tab = document.createElement('div');
     tab.className = 'sheet-tab' + (i === currentSheetIndex ? ' active' : '');
     tab.dataset.idx = i;
-    tab.innerHTML = `<span class="sheet-tab-name">${escHtml(sh.title || 'Sin título')}</span>` +
+    tab.draggable = true;
+    tab.innerHTML = `<span class="drag-dot" title="Arrastra para reordenar">⠿</span>` +
+      `<input type="checkbox" data-check="${i}" ${exportChecks[i] ? 'checked' : ''} title="Incluir esta ficha al exportar">` +
+      `<span class="sheet-tab-name">${sh.sheetType === 'personaje' ? '🧙' : '📜'} ${escHtml(sh.title || 'Sin título')}</span>` +
       `<button class="icon-btn" data-sdup="${i}" title="Duplicar ficha">⧉</button>` +
       `<button class="del-btn" data-sdel="${i}" title="Eliminar ficha">🗑</button>`;
     tab.addEventListener('click', e=>{
-      if(e.target.closest('button')) return;
+      if(e.target.closest('button') || e.target.matches('input[type=checkbox]')) return;
       switchToSheet(i);
+    });
+    tab.addEventListener('dragstart', e=>{
+      sheetDragIndex = i;
+      tab.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    tab.addEventListener('dragend', ()=> tab.classList.remove('dragging'));
+    tab.addEventListener('dragover', e=> e.preventDefault());
+    tab.addEventListener('drop', e=>{
+      e.preventDefault();
+      if(sheetDragIndex === null || sheetDragIndex === i) return;
+      reorderSheets(sheetDragIndex, i);
+      sheetDragIndex = null;
+    });
+    tab.querySelector('[data-check]').addEventListener('click', e=> e.stopPropagation());
+    tab.querySelector('[data-check]').addEventListener('change', e=>{
+      exportChecks[i] = e.target.checked;
     });
     tab.querySelector('[data-sdup]').addEventListener('click', e=>{
       e.stopPropagation();
@@ -1034,6 +1500,32 @@ function renderSheetTabs(){
   });
 }
 
+document.getElementById('exportSelectAllBtn').addEventListener('click', ()=>{
+  exportChecks = sheets.map(()=>true);
+  renderSheetTabs();
+});
+document.getElementById('exportSelectNoneBtn').addEventListener('click', ()=>{
+  exportChecks = sheets.map(()=>false);
+  renderSheetTabs();
+});
+
+function getSelectedSheetIndices(){
+  const idxs = [];
+  sheets.forEach((sh, i)=>{ if(exportChecks[i]) idxs.push(i); });
+  return idxs;
+}
+
+/* Para exportaciones que combinan varias fichas: los personajes van primero,
+   seguidos de las unidades; dentro de cada grupo se respeta el orden original. */
+function getSelectedSheetIndicesSorted(){
+  return getSelectedSheetIndices().slice().sort((a,b)=>{
+    const ta = sheets[a].sheetType === 'personaje' ? 0 : 1;
+    const tb = sheets[b].sheetType === 'personaje' ? 0 : 1;
+    if(ta !== tb) return ta - tb;
+    return a - b;
+  });
+}
+
 function switchToSheet(index){
   if(index === currentSheetIndex) return;
   syncCurrentSheet();
@@ -1044,7 +1536,7 @@ function switchToSheet(index){
 
 document.getElementById('addSheetBtn').addEventListener('click', ()=>{
   syncCurrentSheet();
-  sheets.push(makeBlankState());
+  sheets.push(makeBlankState(sheetType));
   currentSheetIndex = sheets.length - 1;
   applyState(sheets[currentSheetIndex]);
   renderSheetTabs();
@@ -1055,6 +1547,7 @@ function duplicateSheetAt(index){
   const copy = JSON.parse(JSON.stringify(sheets[index]));
   copy.title = (copy.title || 'Ficha') + ' (copia)';
   sheets.splice(index + 1, 0, copy);
+  exportChecks.splice(index + 1, 0, exportChecks[index] !== undefined ? exportChecks[index] : true);
   currentSheetIndex = index + 1;
   applyState(sheets[currentSheetIndex]);
   renderSheetTabs();
@@ -1062,8 +1555,10 @@ function duplicateSheetAt(index){
 
 function deleteSheetAt(index){
   sheets.splice(index, 1);
+  exportChecks.splice(index, 1);
   if(sheets.length === 0){
     sheets.push(makeBlankState());
+    exportChecks.push(true);
   }
   if(currentSheetIndex >= sheets.length){
     currentSheetIndex = sheets.length - 1;
@@ -1144,44 +1639,6 @@ function waitForImages(container){
   }));
 }
 
-document.getElementById('btnPng').addEventListener('click', ()=>{
-  const btn = document.getElementById('btnPng');
-  const card = document.getElementById('card');
-  const originalLabel = btn.textContent;
-  btn.textContent = 'Generando imagen...';
-  btn.disabled = true;
-  waitForImages(card).then(()=>{
-    return html2canvas(card, {
-      backgroundColor:'#ffffff',
-      scale:2,
-      useCORS:true,
-      allowTaint:true,
-      imageTimeout:0
-    });
-  }).then(canvas=>{
-    if(grayscaleMode){
-      const ctx = canvas.getContext('2d');
-      const id = ctx.getImageData(0,0,canvas.width,canvas.height);
-      const d = id.data;
-      for(let i=0;i<d.length;i+=4){
-        const gray = 0.299*d[i] + 0.587*d[i+1] + 0.114*d[i+2];
-        d[i]=d[i+1]=d[i+2]=gray;
-      }
-      ctx.putImageData(id,0,0);
-    }
-    const link = document.createElement('a');
-    link.download = (document.getElementById('title').value || 'ficha').replace(/\s+/g,'_') + (grayscaleMode ? '_bn' : '') + '.png';
-    link.href = canvas.toDataURL('image/png');
-    link.click();
-  }).catch(err=>{
-    console.error(err);
-    alert('Hubo un problema al generar la imagen. Inténtalo de nuevo.');
-  }).finally(()=>{
-    btn.textContent = originalLabel;
-    btn.disabled = false;
-  });
-});
-
 /* ---------- word export ---------- */
 function buildStatsTableWordHtml(profs){
   const cellFont = "font-family:'PT Serif',Georgia,serif;font-size:10.5pt;";
@@ -1198,6 +1655,14 @@ function buildUnitWordHtml(s, grayscaleMode, logoDataForExport){
   const rulesRaw = (s.rules||'').split(',').map(x=>x.trim()).filter(Boolean).join(', ');
   const optItemsHtml = (s.options||[]).filter(o=>o.trim()).map(o=>`<li style="margin-bottom:2px;">${escHtml(o)}</li>`).join('');
   const cmdText = grupoMandoText(s.cmdMusico, s.cmdPortaestandarte, s.cmdCampeonNombre, s.cmdCampeonPts);
+  const isPersonaje = s.sheetType === 'personaje';
+  const monturaTxt = isPersonaje ? monturaText(s.monturas) : '';
+  const sizeFieldHtml = isPersonaje
+    ? ''
+    : `<div style="font-family:'PT Serif',Georgia,serif;font-size:11pt;color:#1c1a16;margin:0 0 8px;"><b>Tamaño de la unidad:</b> ${escHtml(s.size||'')}</div>`;
+  const monturaFieldHtml = monturaTxt
+    ? `<div style="font-family:'PT Serif',Georgia,serif;font-size:11pt;color:#1c1a16;margin:0 0 8px;"><b>Montura:</b> ${escHtml(monturaTxt)}</div>`
+    : '';
 
   const preset = PRESETS[s.preset] || PRESETS[currentPreset] || PRESETS.bretonia;
   const barBg = grayscaleMode ? '#d6d6d6' : preset.bar;
@@ -1205,17 +1670,23 @@ function buildUnitWordHtml(s, grayscaleMode, logoDataForExport){
 
   const bodyFont = "font-family:'PT Serif',Georgia,serif;font-size:11pt;color:#1c1a16;";
   const logoImg = logoDataForExport ? `<img src="${logoDataForExport}" width="46" height="46" style="display:block;">` : '';
-  const illuImg = s.illuData ? `<img src="${s.illuData}" width="220" height="300" style="display:block;">` : '';
+  const frameBorder = showFrame ? 'border:2px solid #1c1a16;' : 'border:2px solid transparent;';
+
+  const illuWPct = (s.illuWidthPct != null) ? s.illuWidthPct : ILLU_DEFAULT_W_PCT;
+  const illuW = Math.round(CONTENT_W * illuWPct / 100);
+  const illuX = (s.illuPosX != null) ? Math.round(s.illuPosX) : Math.max(0, CONTENT_W - illuW);
+  const illuY = (s.illuPosY != null) ? Math.round(s.illuPosY) : -20;
+  const illuImg = s.illuData ? `<img src="${s.illuData}" width="${illuW}" style="position:absolute;left:${illuX}px;top:${illuY}px;display:block;z-index:1;">` : '';
 
   return `
-  <table cellpadding="0" cellspacing="0" border="0" style="width:700px;border:2px solid #1c1a16;border-collapse:collapse;background:#ffffff;margin-bottom:24px;">
+  <table cellpadding="0" cellspacing="0" border="0" style="width:${CONTENT_W + 52}px;${frameBorder}border-collapse:collapse;background:#ffffff;margin-bottom:24px;">
     <tr>
-      <td colspan="2" style="border:none;padding:16px 22px 8px 22px;">
-        <div style="font-family:Georgia,'Times New Roman',serif;font-size:22pt;font-weight:bold;text-transform:uppercase;letter-spacing:1px;color:#1c1a16;">${escHtml(s.title||'')}</div>
+      <td style="border:none;padding:16px 26px 8px 26px;">
+        <div style="font-family:Georgia,'Times New Roman',serif;font-size:22pt;font-weight:bold;text-transform:uppercase;letter-spacing:1px;color:#1c1a16;position:relative;z-index:2;">${escHtml(s.title||'')}</div>
       </td>
     </tr>
     <tr>
-      <td colspan="2" style="border:none;padding:0 22px 14px 22px;">
+      <td style="border:none;padding:0 26px 14px 26px;position:relative;z-index:2;">
         <table cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;">
           <tr>
             <td style="background:${barBg};border-top:1px solid ${barBorder};border-bottom:1px solid ${barBorder};width:50px;padding:3px 8px;">${logoImg}</td>
@@ -1226,17 +1697,20 @@ function buildUnitWordHtml(s, grayscaleMode, logoDataForExport){
       </td>
     </tr>
     <tr>
-      <td style="border:none;vertical-align:top;width:460px;padding:0 12px 20px 22px;">
-        ${buildStatsTableWordHtml(s.statProfiles||[])}
-        <div style="${bodyFont}margin:0 0 8px;"><b>Tamaño de la unidad:</b> ${escHtml(s.size||'')}</div>
-        <div style="${bodyFont}margin:0 0 8px;"><b>Equipo:</b> ${escHtml(s.equipo||'')}</div>
-        ${optItemsHtml ? `<div style="${bodyFont}font-weight:bold;margin:0 0 4px;">Opciones:</div><ul style="${bodyFont}margin:0 0 8px;padding-left:18px;">${optItemsHtml}</ul>` : ''}
-        ${cmdText ? `<div style="${bodyFont}margin:0 0 8px;"><b>Grupo de mando:</b> ${escHtml(cmdText)}</div>` : ''}
-        <div style="${bodyFont}font-weight:bold;margin:0 0 2px;">Reglas especiales:</div>
-        <div style="${bodyFont}font-style:italic;">${escHtml(rulesRaw)}</div>
-      </td>
-      <td style="border:none;vertical-align:top;width:220px;padding:0 22px 20px 12px;">
-        <table cellpadding="0" cellspacing="0" border="0" style="width:220px;"><tr><td style="width:220px;height:300px;padding:0;overflow:hidden;">${illuImg}</td></tr></table>
+      <td style="border:none;padding:0 26px 20px 26px;position:relative;">
+        <div style="position:relative;width:${CONTENT_W}px;min-height:380px;">
+          <div style="${bodyFont}position:relative;z-index:2;">
+            ${buildStatsTableWordHtml(s.statProfiles||[])}
+            ${sizeFieldHtml}
+            <div style="${bodyFont}margin:0 0 8px;"><b>Equipo:</b> ${escHtml(s.equipo||'')}</div>
+            ${monturaFieldHtml}
+            ${optItemsHtml ? `<div style="${bodyFont}font-weight:bold;margin:0 0 4px;">Opciones:</div><ul style="${bodyFont}margin:0 0 8px;padding-left:18px;">${optItemsHtml}</ul>` : ''}
+            ${cmdText ? `<div style="${bodyFont}margin:0 0 8px;"><b>Grupo de mando:</b> ${escHtml(cmdText)}</div>` : ''}
+            <div style="${bodyFont}font-weight:bold;margin:0 0 2px;">Reglas especiales:</div>
+            <div style="${bodyFont}font-style:italic;">${escHtml(rulesRaw)}</div>
+          </div>
+          ${illuImg}
+        </div>
       </td>
     </tr>
   </table>
@@ -1247,70 +1721,186 @@ function wordDocWrapper(bodyHtml){
   return `
   <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
   <head><meta charset="utf-8">
-  <!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View></w:WordDocument></xml><![endif]-->
+  <!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom></w:WordDocument></xml><![endif]-->
   <style>
     body{font-family:'PT Serif', Georgia, serif; color:#1c1a16; background:#fff;}
     table{border-collapse:collapse;}
+    @page Section1{size:8.5in 11in;margin:0.35in 0.35in 0.35in 0.35in;}
+    div.Section1{page:Section1;}
   </style></head>
-  <body>${bodyHtml}</body></html>`;
+  <body><div class="Section1">${bodyHtml}</div></body></html>`;
 }
 
-document.getElementById('btnDoc').addEventListener('click', async ()=>{
-  const btn = document.getElementById('btnDoc');
+function sanitizeFilename(name){
+  return (name || 'ficha').trim().replace(/\s+/g,'_').replace(/[\\/:*?"<>|]/g,'') || 'ficha';
+}
+
+document.getElementById('btnExportWord').addEventListener('click', async ()=>{
+  syncCurrentSheet();
+  const selected = getSelectedSheetIndicesSorted();
+  if(selected.length === 0){
+    alert('Marca al menos una ficha para exportar.');
+    return;
+  }
+  const btn = document.getElementById('btnExportWord');
   const original = btn.textContent;
-  btn.textContent = 'Generando documento...';
+  btn.textContent = 'Generando documento(s)...';
   btn.disabled = true;
   try{
-    let s = collectState();
     let logoForExport = armyLogoData;
     if(grayscaleMode){
       logoForExport = await grayscaleImageData(armyLogoData);
-      s.illuData = await grayscaleImageData(s.illuData);
     }
-    const html = wordDocWrapper(buildUnitWordHtml(s, grayscaleMode, logoForExport));
-    const blob = new Blob(['\ufeff', html], {type:'application/msword'});
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = (s.title || 'ficha').replace(/\s+/g,'_') + (grayscaleMode ? '_bn' : '') + '.doc';
-    link.click();
+    const files = [];
+    const usedNames = {};
+    for(const idx of selected){
+      let s = Object.assign({}, sheets[idx]);
+      if((s.illuBrightness||100) !== 100){
+        s.illuData = await adjustImageBrightness(s.illuData, s.illuBrightness || 100);
+      }
+      if(grayscaleMode){
+        s.illuData = await grayscaleImageData(s.illuData);
+      }
+      const html = wordDocWrapper(buildUnitWordHtml(s, grayscaleMode, logoForExport));
+      const blob = new Blob(['\ufeff', html], {type:'application/msword'});
+      let name = sanitizeFilename(s.title);
+      if(usedNames[name] != null){ usedNames[name]++; name = name + '_' + usedNames[name]; } else { usedNames[name] = 0; }
+      files.push({ name: name + (grayscaleMode ? '_bn' : '') + '.doc', blob });
+    }
+    if(files.length === 1){
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(files[0].blob);
+      link.download = files[0].name;
+      link.click();
+    }else{
+      const zip = new JSZip();
+      files.forEach(f => zip.file(f.name, f.blob));
+      const zipBlob = await zip.generateAsync({type:'blob'});
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(zipBlob);
+      link.download = 'fichas_word' + (grayscaleMode ? '_bn' : '') + '.zip';
+      link.click();
+    }
+  }catch(err){
+    console.error(err);
+    alert('Hubo un problema generando los documentos. Inténtalo de nuevo.');
   }finally{
     btn.textContent = original;
     btn.disabled = false;
   }
 });
 
-document.getElementById('btnDocAll').addEventListener('click', async ()=>{
+/* Captura una ficha concreta como canvas, mostrándola brevemente en la vista
+   (necesario porque el resto de fichas no están en el DOM). */
+async function captureSheetCanvas(idx){
+  currentSheetIndex = idx;
+  applyState(sheets[idx]);
+  const card = document.getElementById('card');
+  await waitForImages(card);
+  const canvas = await html2canvas(card, {
+    backgroundColor:'#ffffff', scale:2, useCORS:true, allowTaint:true, imageTimeout:0
+  });
+  if(grayscaleMode){
+    const ctx = canvas.getContext('2d');
+    const id = ctx.getImageData(0,0,canvas.width,canvas.height);
+    const d = id.data;
+    for(let i=0;i<d.length;i+=4){
+      const gray = 0.299*d[i] + 0.587*d[i+1] + 0.114*d[i+2];
+      d[i]=d[i+1]=d[i+2]=gray;
+    }
+    ctx.putImageData(id,0,0);
+  }
+  return canvas;
+}
+
+document.getElementById('btnExportPng').addEventListener('click', async ()=>{
   syncCurrentSheet();
-  if(sheets.length === 0){
-    alert('No hay ninguna ficha creada todavía.');
+  const selected = getSelectedSheetIndicesSorted();
+  if(selected.length === 0){
+    alert('Marca al menos una ficha para exportar.');
     return;
   }
-  const btn = document.getElementById('btnDocAll');
+  const btn = document.getElementById('btnExportPng');
   const original = btn.textContent;
-  btn.textContent = 'Generando documento...';
   btn.disabled = true;
+  const originalIndex = currentSheetIndex;
   try{
-    let logoForExport = armyLogoData;
-    if(grayscaleMode){
-      logoForExport = await grayscaleImageData(armyLogoData);
+    const files = [];
+    const usedNames = {};
+    for(let n=0; n<selected.length; n++){
+      const idx = selected[n];
+      btn.textContent = `Generando PNG ${n+1}/${selected.length}...`;
+      const canvas = await captureSheetCanvas(idx);
+      const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
+      let name = sanitizeFilename(sheets[idx].title);
+      if(usedNames[name] != null){ usedNames[name]++; name = name + '_' + usedNames[name]; } else { usedNames[name] = 0; }
+      files.push({ name: name + (grayscaleMode ? '_bn' : '') + '.png', blob });
     }
+    if(files.length === 1){
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(files[0].blob);
+      link.download = files[0].name;
+      link.click();
+    }else{
+      const zip = new JSZip();
+      files.forEach(f => zip.file(f.name, f.blob));
+      const zipBlob = await zip.generateAsync({type:'blob'});
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(zipBlob);
+      link.download = 'fichas_png' + (grayscaleMode ? '_bn' : '') + '.zip';
+      link.click();
+    }
+  }catch(err){
+    console.error(err);
+    alert('Hubo un problema generando las imágenes. Inténtalo de nuevo.');
+  }finally{
+    currentSheetIndex = originalIndex;
+    applyState(sheets[originalIndex]);
+    renderSheetTabs();
+    btn.textContent = original;
+    btn.disabled = false;
+  }
+});
+
+document.getElementById('btnExportWordImages').addEventListener('click', async ()=>{
+  syncCurrentSheet();
+  const selected = getSelectedSheetIndicesSorted();
+  if(selected.length === 0){
+    alert('Marca al menos una ficha para exportar.');
+    return;
+  }
+  const btn = document.getElementById('btnExportWordImages');
+  const original = btn.textContent;
+  btn.disabled = true;
+  const originalIndex = currentSheetIndex;
+  try{
     const parts = [];
-    for(let i=0;i<sheets.length;i++){
-      let s = sheets[i];
-      if(grayscaleMode){
-        s = Object.assign({}, s);
-        s.illuData = await grayscaleImageData(s.illuData);
-      }
-      const unitHtml = buildUnitWordHtml(s, grayscaleMode, logoForExport);
-      parts.push(i === 0 ? unitHtml : `<br clear="all" style="mso-special-character:line-break;page-break-before:always;">${unitHtml}`);
+    for(let n=0; n<selected.length; n++){
+      const idx = selected[n];
+      btn.textContent = `Generando ${n+1}/${selected.length}...`;
+      const canvas = await captureSheetCanvas(idx);
+      const imgData = canvas.toDataURL('image/jpeg', 0.92);
+      const naturalW = canvas.width / 2;
+      const naturalH = canvas.height / 2;
+      const maxW = 700; /* algo por debajo del ancho útil de página con los márgenes reducidos */
+      const scale = Math.min(1, maxW / naturalW);
+      const dispW = Math.round(naturalW * scale);
+      const dispH = Math.round(naturalH * scale);
+      parts.push(`<div style="width:${dispW}px;margin:0 auto 20px auto;text-align:center;"><img src="${imgData}" width="${dispW}" height="${dispH}" style="display:block;margin:0 auto;"></div>`);
     }
-    const html = wordDocWrapper(parts.join(''));
+    const html = wordDocWrapper(`<div style="text-align:center;">${parts.join('')}</div>`);
     const blob = new Blob(['\ufeff', html], {type:'application/msword'});
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.download = 'coleccion_fichas' + (grayscaleMode ? '_bn' : '') + '.doc';
+    link.download = 'fichas_imagenes' + (grayscaleMode ? '_bn' : '') + '.doc';
     link.click();
+  }catch(err){
+    console.error(err);
+    alert('Hubo un problema generando el documento. Inténtalo de nuevo.');
   }finally{
+    currentSheetIndex = originalIndex;
+    applyState(sheets[originalIndex]);
+    renderSheetTabs();
     btn.textContent = original;
     btn.disabled = false;
   }
@@ -1358,23 +1948,17 @@ document.getElementById('btnDocSummary').addEventListener('click', async ()=>{
 });
 
 /* ---------- sheet type switch (unidad / personaje) ---------- */
+function syncTypeSwitchUI(){
+  document.querySelectorAll('.type-btn').forEach(b=>{
+    b.classList.toggle('active', b.dataset.type === sheetType);
+  });
+}
+
 document.querySelectorAll('.type-btn').forEach(btn=>{
   btn.addEventListener('click', ()=>{
-    document.querySelectorAll('.type-btn').forEach(b=>b.classList.remove('active'));
-    btn.classList.add('active');
-    const type = btn.dataset.type;
-    const unitContent = document.getElementById('unitPanelContent');
-    const notice = document.getElementById('personajePlaceholder');
-    const stage = document.querySelector('.stage');
-    if(type === 'personaje'){
-      unitContent.style.display = 'none';
-      notice.style.display = 'block';
-      stage.style.visibility = 'hidden';
-    }else{
-      unitContent.style.display = '';
-      notice.style.display = 'none';
-      stage.style.visibility = 'visible';
-    }
+    sheetType = btn.dataset.type;
+    syncTypeSwitchUI();
+    update();
   });
 });
 
@@ -1403,6 +1987,7 @@ document.querySelectorAll('.type-btn').forEach(btn=>{
 applyPreset('bretonia');
 renderStatRows();
 renderOptRows();
+renderMonturaRows();
 update();
 sheets = [collectState()];
 currentSheetIndex = 0;
