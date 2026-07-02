@@ -1,0 +1,2222 @@
+<!DOCTYPE html>
+<!--
+  CODEXMAKER — Generador de fichas de unidad (Warhammer)
+  Versión: 2.12
+
+  CHANGELOG
+  v2.12 - Panel lateral izquierdo un 30% más ancho por defecto (400px ->
+          520px). Sigue siendo redimensionable arrastrando el borde,
+          igual que antes.
+  v2.11 - Arreglado un fallo por el que los valores de los perfiles se
+          salían del recuadro (las casillas no se encogían a su columna
+          de la rejilla); aplicado también a Opciones y Montura por si
+          acaso. Reglas especiales admite ahora saltos de línea: dentro de
+          cada línea las reglas separadas por comas se siguen juntando
+          igual, pero puedes pulsar Intro para maquetar el texto en varias
+          líneas (por ejemplo, alrededor de la ilustración). Se respeta en
+          la vista previa, el PNG, el Word con texto, el Word con imágenes
+          y el resumen.
+  v2.10 - Revertido el atributo "TS" añadido en la v2.8 (perfiles vuelven a
+          ser M, HA, HP, F, R, H, I, A, L). Afecta al panel, la vista
+          previa, el Word individual, el PNG y el resumen. Se ha añadido
+          además una limpieza automática por si alguna ficha se llegó a
+          guardar con el TS durante ese tiempo, para que no queden
+          columnas descuadradas. Puede que se retome en el futuro.
+  v2.9 - Arreglado un fallo que a veces desplazaba la posición de la
+         ilustración al cargar una ficha o cambiar entre fichas: se debía
+         a que se intentaba encajar la imagen en los márgenes antes de
+         conocer su tamaño real (se asumía cuadrada por error), lo que
+         podía mover y guardar una posición equivocada. Ahora solo se
+         ajusta una vez se conocen las medidas reales.
+         El programa empieza vacío al abrirlo (como al pulsar "+ Nueva
+         ficha"), en vez de traer una ficha de ejemplo ya rellena.
+  v2.8 - "Word con texto" ahora genera siempre un único documento con todas
+         las fichas marcadas (antes exportaba una por archivo). Resumen de
+         perfiles: columnas de atributos con el mismo ancho (usando
+         colgroup), tipografía algo más cuidada y compacta, el primer
+         perfil de cada ficha sale ligeramente más grande que los
+         siguientes para distinguir dónde empieza cada unidad sin usar
+         títulos, y las reglas especiales pasan a ser una tabla de dos
+         columnas (Ficha / Reglas). Nuevo atributo "TS" al final de cada
+         perfil de características (de momento vacío por defecto).
+  v2.7 - Nuevo botón "Quitar imagen" en Ilustración. Arreglado el brillo en
+         la exportación a PNG (y Word con imágenes): ahora se hornea en los
+         píxeles antes de capturar, en vez de depender de que html2canvas
+         interprete el filtro CSS (no lo hacía de forma fiable). Rehecho el
+         "Word con texto": vuelve a ser una tabla de dos columnas de verdad
+         (texto a la izquierda, imagen arriba a la derecha) en vez de
+         posición libre, que Word no soportaba bien y hacía que la imagen
+         cayera al final; de paso, las columnas de atributos tienen ahora
+         el mismo ancho. Rehecho el resumen de perfiles: página 1 con todos
+         los atributos en una tabla compacta sin títulos de unidad, página 2
+         con las reglas especiales (una línea por ficha).
+  v2.6 - Todas las secciones del panel se pueden plegar/desplegar ahora
+         (antes solo Vista y Escudo del ejército). Solo esas dos siguen
+         empezando cerradas por defecto; el resto empiezan abiertas.
+  v2.5 - El programa pasa a llamarse CodexMaker (título de la pestaña y
+         cabecera del panel). Cuando no hay ilustración subida, el hueco se
+         queda en blanco (sin texto ni borde de aviso).
+  v2.4 - Las secciones "Vista" y "Escudo del ejército" ahora se pueden
+         plegar/desplegar (empiezan plegadas, ya que se usan poco). Nuevos
+         botones en "Tus fichas": "Vaciar ficha actual" (borra el contenido
+         de la ficha abierta sin quitarla de la lista) y "Borrar todas las
+         fichas" (deja el archivo como si fuera nuevo). Ambos piden
+         confirmación antes de actuar, ya que no se pueden deshacer.
+  v2.3 - El "Alto máximo de la ficha" ahora es un ajuste propio de cada
+         ficha (antes era global para todo el archivo), con un rango más
+         estrecho de 450 a 800 px. Como es un máximo, no un tamaño fijo,
+         las fichas con poco texto quedan más pequeñas solas, mientras que
+         las que llenan ese espacio se quedan en el tamaño estándar (800).
+  v2.2 - "Quitar marco" pasa a ser el ajuste por defecto. Montura se muestra
+         ahora como lista con viñetas (una por línea), igual que Opciones,
+         y sigue sin aparecer nada si no hay ninguna montura. Nuevo control
+         "Alto máximo de la ficha" en Vista: si el contenido no cabe, se
+         recorta por abajo (nunca por arriba); pensado para que quepan
+         varias fichas en la misma página al exportar a Word con imágenes
+         o PNG.
+  v2.1 - Hoja de personaje: Montura pasa a ir debajo de Equipo, y solo se
+         muestra si tiene algo (antes de meter una montura ya salía vacía).
+         Word con imágenes: las imágenes salen centradas, con menos margen
+         de página, y ya no se fuerza una página por ficha, así que si dos
+         caben en la misma hoja, Word las coloca juntas automáticamente.
+         Los tres botones de exportar caben ahora en una sola línea (con
+         texto más corto). Recuperado el reordenar fichas arrastrando en
+         "Tus fichas" (icono ⠿).
+  v2.0 - Nuevo interruptor "Quitar/Añadir marco" en Vista: controla si la
+         ficha lleva el borde exterior, tanto en la vista previa como en
+         todas las exportaciones (PNG, Word con texto, Word con imágenes).
+         Ajustado el espaciado entre fichas en "Tus fichas" para que se vea
+         más compacto, como antes.
+  v1.9 - Nuevas opciones de exportación: PNG (imágenes sueltas), Word con
+         texto (como antes) y Word con imágenes (todas las fichas marcadas
+         pegadas como imágenes dentro de un único documento, una tras otra).
+         Se ha quitado la exportación a PDF. Al combinar varias fichas, los
+         personajes van siempre primero y las unidades después.
+         Añadidas de verdad las hojas de personaje (antes solo un aviso de
+         "próximamente"): son iguales a las de unidad salvo que no llevan
+         "Tamaño de la unidad" y en su lugar tienen una lista de "Montura"
+         (nombre + puntos, se pueden añadir varias). El interruptor de
+         arriba cambia el tipo de la ficha actual; "+ Nueva ficha" crea una
+         ficha del tipo que esté seleccionado en ese momento.
+  v1.8 - "Exportar fichas" ya no es una sección aparte: la casilla de
+         selección para exportar vive ahora en cada fila de "Tus fichas",
+         junto con marcar/desmarcar todas y los botones de Word/PDF.
+  v1.7 - Reordenado el panel: Guardar/cargar, Vista, Escudo del ejército,
+         Tus fichas y Exportar fichas ahora van arriba del todo, en ese
+         orden, seguidos del resto de secciones como antes. Eliminado el
+         botón "Descargar como imagen (PNG)" (ya no es necesario).
+  v1.6 - Nuevo control de brillo para la ilustración (más clara o más
+         oscura), aplicado en la vista previa, el PNG, el PDF y el Word.
+  v1.5 - Nueva exportación con lista de comprobación: eliges qué fichas
+         exportar (marcar/desmarcar todas), y a qué formato, Word o PDF.
+         Si marcas varias, se descargan juntas en un .zip (un archivo por
+         ficha); si solo marcas una, se descarga directamente. Sustituye a
+         los antiguos botones de "una ficha" / "todas las fichas".
+  v1.4 - Arreglo: la generación de imágenes con IA usaba un endpoint que
+         requiere autenticación y fallaba siempre; ahora usa el endpoint
+         clásico y realmente gratuito de Pollinations.ai, y muestra las
+         imágenes que sí se generen aunque alguna falle.
+  v1.3 - Nueva opción para generar imágenes de referencia con IA a partir del
+         nombre de la unidad (fondo blanco, 3 variantes), usando el servicio
+         externo gratuito Pollinations.ai (sin clave API). Experimental.
+  v1.2 - El título y la barra gris siempre quedan por delante de la ilustración,
+         aunque la subas por encima del borde del texto (antes se veía la
+         imagen tapando esa zona).
+  v1.1 - La ilustración se puede subir un poco por encima del borde superior
+         del texto (hasta 40px), y empieza colocada así por defecto.
+  v1.0 - Primera versión "estable": fichas múltiples por archivo, perfiles de
+         características, grupo de mando, opciones, reglas especiales, escudo
+         de ejército único, ilustración de tamaño y posición libres (nunca se
+         recorta, se puede colocar delante o detrás del texto), vista y
+         exportación en blanco y negro, exportación a PNG y a Word (ficha
+         suelta, documento con todas las fichas en páginas separadas, y
+         resumen de perfiles), guardar/cargar todo el archivo en .json con
+         imágenes comprimidas automáticamente, panel redimensionable.
+
+  Para versionar de verdad (y poder volver atrás con garantías), usa Git:
+  haz un commit cada vez que subas una versión nueva a tu repositorio, y
+  opcionalmente crea un tag (v1.0, v1.1...) para marcar los hitos importantes.
+-->
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>CodexMaker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=PT+Serif:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+  :root{
+    --paper:#ffffff;
+    --ink:#1c1a16;
+    --rule:#1c1a16;
+    --gold:#8a6d2f;
+    --panel:#efeadd;
+    --muted:#6b6455;
+    --accent:#7a1f1f;
+    --bar-gray:#d9d5c6;
+    --bar-border:#7d795f;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    font-family:'PT Serif','Georgia','Times New Roman',serif;
+    background:#e8e3d6;
+    color:var(--ink);
+    display:flex;
+    min-height:100vh;
+  }
+  /* ---------- LEFT: FORM ---------- */
+  .panel{
+    width:520px;
+    min-width:300px;
+    max-width:900px;
+    flex-shrink:0;
+    background:#fbfaf6;
+    border-right:1px solid #d8d2c0;
+    padding:22px 20px 16px;
+    overflow-y:scroll;
+    height:100vh;
+    position:sticky;
+    top:0;
+    scrollbar-width:auto;
+    scrollbar-color:#b6ac8e #ece7d8;
+  }
+  .panel::-webkit-scrollbar{width:12px;}
+  .panel::-webkit-scrollbar-track{background:#ece7d8;}
+  .panel::-webkit-scrollbar-thumb{background:#b6ac8e;border-radius:6px;border:3px solid #ece7d8;}
+  .panel::-webkit-scrollbar-thumb:hover{background:#9c9174;}
+  .resize-handle{
+    width:7px;
+    flex-shrink:0;
+    cursor:col-resize;
+    background:#d8d2c0;
+    position:sticky;
+    top:0;
+    height:100vh;
+  }
+  .resize-handle:hover, .resize-handle.active{background:var(--accent);}
+  .resize-handle::after{
+    content:'';
+    position:absolute;
+    left:2px;top:50%;
+    transform:translateY(-50%);
+    width:3px;height:36px;
+    border-radius:2px;
+    background:rgba(0,0,0,.25);
+  }
+  .panel h1{
+    font-size:15px;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+    margin:0 0 4px;
+    font-family:'Trebuchet MS',sans-serif;
+  }
+  .panel .sub{
+    font-family:'Trebuchet MS',sans-serif;
+    font-size:11px;
+    color:var(--muted);
+    margin-bottom:14px;
+  }
+  .type-switch{display:flex;gap:6px;margin-bottom:16px;}
+  .type-btn{
+    flex:1;
+    font-family:'Trebuchet MS',sans-serif;
+    font-size:11.5px;
+    padding:8px 6px;
+    border:1px solid #cfc8b4;
+    background:#fff;
+    border-radius:5px;
+    cursor:pointer;
+  }
+  .type-btn.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+  fieldset{
+    border:1px solid #ddd6c4;
+    border-radius:6px;
+    margin-bottom:14px;
+    padding:10px 12px 14px;
+  }
+  legend{
+    font-family:'Trebuchet MS',sans-serif;
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:.06em;
+    color:var(--accent);
+    padding:0 6px;
+  }
+  details.fieldset-collapse{
+    border:1px solid #ddd6c4;
+    border-radius:6px;
+    margin-bottom:14px;
+    padding:0 12px 0;
+  }
+  details.fieldset-collapse[open]{padding-bottom:14px;}
+  details.fieldset-collapse summary{
+    font-family:'Trebuchet MS',sans-serif;
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:.06em;
+    color:var(--accent);
+    padding:10px 0;
+    cursor:pointer;
+    user-select:none;
+  }
+  details.fieldset-collapse summary:hover{opacity:.8;}
+  details.fieldset-collapse > *:not(summary){margin-top:2px;}
+  label{
+    display:block;
+    font-family:'Trebuchet MS',sans-serif;
+    font-size:11px;
+    color:#444;
+    margin:8px 0 3px;
+  }
+  input[type=text], input[type=number], textarea{
+    width:100%;
+    font-family:'Trebuchet MS',sans-serif;
+    font-size:12.5px;
+    padding:6px 7px;
+    border:1px solid #cfc8b4;
+    border-radius:4px;
+    background:#fff;
+  }
+  textarea{resize:vertical;min-height:44px;}
+  input[type=file]{
+    font-family:'Trebuchet MS',sans-serif;
+    font-size:11px;
+    width:100%;
+  }
+  .row2{display:flex;gap:8px;}
+  .row2 > div{flex:1;}
+  .hint{font-family:'Trebuchet MS',sans-serif;font-size:10.5px;color:var(--muted);margin-top:4px;}
+  #illuGenResults{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;min-height:0;}
+  .illu-gen-thumb{
+    width:76px;height:101px;
+    object-fit:cover;
+    border-radius:4px;
+    border:1px solid #cfc8b4;
+    cursor:pointer;
+    background:#eee;
+  }
+  .illu-gen-thumb:hover{border-color:var(--accent);}
+  .illu-gen-loading{
+    font-family:'Trebuchet MS',sans-serif;
+    font-size:10.5px;
+    color:var(--muted);
+  }
+
+  .preset-row{display:flex;gap:6px;flex-wrap:wrap;}
+  .preset-btn{
+    font-family:'Trebuchet MS',sans-serif;
+    font-size:11px;
+    border:1px solid #cfc8b4;
+    background:#fff;
+    border-radius:4px;
+    padding:6px 8px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:6px;
+    flex:1;
+    min-width:100px;
+  }
+  .preset-btn:hover{border-color:var(--accent);}
+  .preset-swatch{width:12px;height:12px;border-radius:3px;border:1px solid rgba(0,0,0,.3);}
+
+  
+  .stat-row{
+    display:grid;
+    grid-template-columns:1.4fr repeat(9, 28px) 22px 22px;
+    gap:3px;
+    align-items:center;
+    margin-bottom:4px;
+    cursor:grab;
+  }
+  .stat-row.dragging{opacity:.4;}
+  .stat-row input{padding:3px 2px;font-size:10.5px;text-align:center;min-width:0;width:100%;}
+  .stat-row input.name{text-align:left;padding:3px 5px;}
+  .stat-head{
+    display:grid;
+    grid-template-columns:1.4fr repeat(9, 28px) 22px 22px;
+    gap:3px;
+    font-family:'Trebuchet MS',sans-serif;
+    font-size:9px;
+    text-align:center;
+    color:var(--muted);
+    margin-bottom:3px;
+  }
+  .small-btn{
+    font-family:'Trebuchet MS',sans-serif;
+    font-size:11px;
+    border:1px solid var(--accent);
+    color:var(--accent);
+    background:#fff;
+    border-radius:4px;
+    padding:5px 9px;
+    cursor:pointer;
+    margin-top:6px;
+    margin-right:6px;
+  }
+  .small-btn:hover{background:var(--accent);color:#fff;}
+  .tiny-btn{
+    font-family:'Trebuchet MS',sans-serif;
+    font-size:10.5px;
+    border:1px solid #cfc8b4;
+    color:#444;
+    background:#fff;
+    border-radius:4px;
+    padding:4px 7px;
+    cursor:pointer;
+    margin-top:2px;
+  }
+  .tiny-btn:hover{border-color:var(--accent);color:var(--accent);}
+  .icon-btn{
+    border:1px solid #d8d2c0;
+    background:#fdfcf9;
+    color:#555;
+    cursor:pointer;
+    font-size:12px;
+    line-height:1;
+    width:22px;
+    height:22px;
+    border-radius:4px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:0;
+  }
+  .icon-btn:hover{background:#eee;}
+  .del-btn{
+    border:1px solid #e0b7b7;
+    background:#fdf3f3;
+    color:#b33;
+    cursor:pointer;
+    font-size:12px;
+    line-height:1;
+    width:22px;
+    height:22px;
+    border-radius:4px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:0;
+  }
+  .del-btn:hover{background:#b33;color:#fff;border-color:#b33;}
+  .opt-row, .rule-row{
+    display:flex;gap:6px;margin-bottom:5px;
+    align-items:center;
+    cursor:grab;
+  }
+  .opt-row.dragging{opacity:.4;}
+  .opt-row input, .rule-row input{flex:1;min-width:0;}
+  .montura-row{display:flex;gap:6px;margin-bottom:5px;align-items:center;}
+  .montura-row input.montura-name{flex:2;min-width:0;}
+  .montura-row input.montura-pts{flex:1;min-width:0;}
+  .drag-dot{font-family:monospace;color:#bbb;font-size:12px;padding:0 2px;user-select:none;}
+
+  .sheet-tabs{display:flex;flex-direction:column;gap:2px;max-height:230px;overflow-y:auto;}
+  .sheet-tab{
+    display:flex;align-items:center;gap:6px;
+    padding:4px 7px;
+    border:1px solid #ddd6c4;
+    border-radius:5px;
+    background:#fff;
+    cursor:pointer;
+    font-family:'Trebuchet MS',sans-serif;
+    font-size:11.5px;
+  }
+  .sheet-tab.active{border-color:var(--accent);background:#faf3ef;}
+  .sheet-tab.dragging{opacity:.4;}
+  .sheet-tab-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .sheet-tab .icon-btn, .sheet-tab .del-btn{width:20px;height:20px;font-size:10.5px;flex-shrink:0;}
+  .sheet-tab input[type=checkbox]{flex-shrink:0;cursor:pointer;}
+
+  .queue-list{list-style:none;margin:6px 0;padding:0;}
+  .queue-list li{
+    display:flex;align-items:center;gap:6px;
+    font-family:'Trebuchet MS',sans-serif;
+    font-size:11.5px;
+    padding:5px 7px;
+    background:#f2efe6;
+    border-radius:4px;
+    margin-bottom:4px;
+  }
+  .queue-list li span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .queue-empty{font-family:'Trebuchet MS',sans-serif;font-size:11px;color:var(--muted);}
+
+  .export-bar{
+    position:sticky;
+    bottom:0;
+    margin-top:20px;
+    padding:12px 0 4px;
+    background:linear-gradient(to bottom, transparent, #fbfaf6 22%);
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+  .export-btn{
+    font-family:'Trebuchet MS',sans-serif;
+    font-size:12.5px;
+    font-weight:bold;
+    padding:10px;
+    border-radius:5px;
+    border:none;
+    cursor:pointer;
+    color:#fff;
+  }
+  .export-btn-sm{
+    flex:1;
+    min-width:0;
+    padding:9px 4px;
+    font-size:10.5px;
+    text-align:center;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  #btnDocSummary{background:#5a4a2a;}
+  .export-btn:hover{filter:brightness(1.12);}
+  .export-btn:disabled{opacity:.6;cursor:default;}
+  .file-row{display:flex;gap:8px;align-items:stretch;}
+  .file-row .btnlike{
+    font-family:'Trebuchet MS',sans-serif;
+    font-size:11.5px;
+    border:1px solid #cfc8b4;
+    background:#fff;
+    border-radius:4px;
+    padding:0 9px;
+    height:34px;
+    line-height:1.15;
+    margin:0;
+    cursor:pointer;
+    flex:1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    box-sizing:border-box;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .file-row .btnlike:hover{border-color:var(--accent);}
+  .file-row input[type=file]{display:none;}
+
+  .placeholder-box{
+    font-family:'Trebuchet MS',sans-serif;
+    font-size:12.5px;
+    color:var(--muted);
+    background:#f2efe6;
+    border:1px dashed #cfc8b4;
+    border-radius:8px;
+    padding:22px 18px;
+    text-align:center;
+    line-height:1.6;
+  }
+
+  /* ---------- RIGHT: PREVIEW ---------- */
+  .stage{
+    flex:1;
+    padding:40px;
+    display:flex;
+    justify-content:center;
+    align-items:flex-start;
+    min-width:0;
+  }
+  #card{
+    width:760px;
+    background:#ffffff;
+    border:2px solid var(--ink);
+    box-shadow:0 6px 22px rgba(0,0,0,.18);
+    position:relative;
+    padding:22px 26px 34px;
+    overflow:visible;
+    transition:filter .15s ease;
+  }
+  #card.grayscale-view{filter:grayscale(1);}
+  #card.no-frame{border-color:transparent;}
+  .title{
+    font-size:28px;
+    font-weight:700;
+    letter-spacing:.03em;
+    text-transform:uppercase;
+    margin:0 0 10px;
+    font-family:'Cinzel','Georgia',serif;
+    position:relative;
+    z-index:2;
+  }
+  .subbar{
+    background:var(--bar-gray);
+    color:var(--ink);
+    display:flex;
+    align-items:center;
+    gap:9px;
+    padding:2px 12px;
+    border-radius:1px;
+    margin-bottom:16px;
+    border-top:1px solid var(--bar-border);
+    border-bottom:1px solid var(--bar-border);
+    position:relative;
+    z-index:2;
+  }
+  .subbar .logo{
+    width:50px;height:50px;
+    margin:-14px 0;
+    border-radius:5px;
+    background:#efeadd;
+    border:1px solid var(--bar-border);
+    display:flex;align-items:center;justify-content:center;
+    overflow:hidden;
+    flex-shrink:0;
+  }
+  .subbar .logo img{width:100%;height:100%;object-fit:contain;}
+  .subbar .uname{
+    font-weight:bold;
+    font-size:12px;
+    flex:1;
+  }
+  .subbar .pts{
+    font-family:'PT Serif',serif;
+    font-size:10.5px;
+    white-space:nowrap;
+  }
+  .content-wrap{
+    position:relative;
+    min-height:380px;
+  }
+  .left-col{
+    width:64%;
+    min-width:0;
+    position:relative;
+    z-index:2;
+  }
+  table.stats{
+    border-collapse:collapse;
+    font-size:13px;
+    margin-bottom:14px;
+    width:auto;
+  }
+  table.stats th{
+    font-family:'Trebuchet MS',sans-serif;
+    font-weight:bold;
+    font-size:11.5px;
+    padding:4px 8px;
+    border-bottom:1.5px solid var(--ink);
+    text-align:center;
+    white-space:nowrap;
+  }
+  table.stats th:first-child, table.stats td:first-child{text-align:left;padding-left:2px;padding-right:14px;}
+  table.stats td{
+    padding:4px 8px;
+    text-align:center;
+    border-bottom:1px solid #d6cfba;
+    white-space:nowrap;
+  }
+  .field{margin-bottom:10px;font-size:13px;line-height:1.5;}
+  .field b{font-weight:bold;}
+  .opt-title, .rules-title{font-weight:bold;font-size:13px;margin-bottom:4px;}
+  ul.options{margin:0 0 10px;padding-left:18px;font-size:13px;line-height:1.55;}
+  ul.options li{margin-bottom:2px;}
+  .rules-text{font-style:italic;font-size:13px;white-space:pre-line;}
+  .illu-layer{
+    position:absolute;
+    top:0; left:0; right:0; bottom:0;
+    pointer-events:none;
+    z-index:1;
+  }
+  .illustration{
+    position:absolute;
+    touch-action:none;
+  }
+  .illustration.has-image{cursor:grab; pointer-events:auto;}
+  .illustration.has-image.dragging{cursor:grabbing;}
+  .illustration img{
+    width:100%;
+    height:auto;
+    display:block;
+    pointer-events:none;
+    user-select:none;
+    -webkit-user-drag:none;
+  }
+  .illu-ph{
+    width:249px;
+    height:340px;
+  }
+  @media print{
+    body{background:#fff !important; filter:grayscale(1) !important;}
+    .panel, .resize-handle{display:none !important;}
+    .stage{padding:0 !important;}
+    #card{box-shadow:none !important; filter:grayscale(1) !important;}
+  }
+  @media (max-width:900px){
+    body{flex-direction:column;}
+    .panel{width:100% !important;height:auto;position:relative;}
+    .resize-handle{display:none;}
+    .stage{padding:20px;}
+    #card{width:100%;}
+  }
+</style>
+</head>
+<body>
+
+<div class="panel" id="panel">
+  <h1>CodexMaker <span style="opacity:.5;font-weight:normal;">· v2.12</span></h1>
+  <div class="sub">Rellena los datos y la ficha se genera a la derecha.</div>
+
+  <div class="type-switch" id="typeSwitch">
+    <button type="button" class="type-btn active" data-type="unidad">📜 Hoja de unidad</button>
+    <button type="button" class="type-btn" data-type="personaje">🧙 Hoja de personaje</button>
+  </div>
+
+  <div id="unitPanelContent">
+
+  <details class="fieldset-collapse" open>
+    <summary>Guardar / cargar todas las fichas</summary>
+    <div class="file-row">
+      <button class="btnlike" id="btnSaveJson">💾 Guardar (.json)</button>
+      <label class="btnlike" for="loadJsonFile">📂 Cargar (.json)</label>
+      <input type="file" id="loadJsonFile" accept="application/json,.json">
+    </div>
+    <div class="hint">Guarda todas tus fichas (perfiles, opciones e imágenes) juntas en un único archivo. Si tu navegador lo permite, te dejará elegir dónde guardarlo.</div>
+  </details>
+
+  <details class="fieldset-collapse">
+    <summary>Vista</summary>
+    <button class="small-btn" id="btnGrayscale" style="margin:0;">🎨 Ver a color</button>
+    <button class="small-btn" id="btnFrame" style="margin:0;">🖼️ Añadir marco</button>
+    <div class="hint">Cambia la vista previa y afecta también a lo que se exporta (imagen y Word).</div>
+    <label style="margin-top:10px;">Alto máximo de la ficha: <span id="cardHeightLabel">800 px</span></label>
+    <input type="range" id="cardHeightRange" min="450" max="800" step="10" value="800" style="width:100%;">
+    <button class="tiny-btn" id="cardHeightAutoBtn" style="margin-top:6px;">Restablecer (800 px)</button>
+    <div class="hint">Solo actúa si el contenido no cabe: entonces se recorta por abajo (nunca por arriba). Las fichas con poco texto se quedan más pequeñas solas; esto es lo que fija el límite superior. Es un valor propio de cada ficha. Útil para que quepan varias fichas en la misma página al exportar a Word con imágenes o PNG.</div>
+  </details>
+
+  <details class="fieldset-collapse">
+    <summary>Escudo del ejército</summary>
+    <label>Logo / escudo (opcional)</label>
+    <input type="file" id="logoFile" accept="image/*">
+    <div class="hint">Este icono es único para todo el archivo y se aplica automáticamente a todas tus fichas, así que solo hace falta subirlo una vez.</div>
+  </details>
+
+  <details class="fieldset-collapse" open>
+    <summary>Tus fichas</summary>
+    <div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap;">
+      <button class="tiny-btn" id="addSheetBtn" style="margin-top:0;">+ Nueva ficha</button>
+      <button class="tiny-btn" id="exportSelectAllBtn">Marcar todas</button>
+      <button class="tiny-btn" id="exportSelectNoneBtn">Desmarcar todas</button>
+    </div>
+    <div class="sheet-tabs" id="sheetTabs"></div>
+    <div class="hint">Haz clic en una ficha para editarla. ⧉ duplica, 🗑 elimina. La casilla marca si se incluye al exportar.</div>
+    <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;">
+      <button class="tiny-btn" id="clearCurrentSheetBtn" style="background:#7a1f1f;color:#fff;border-color:#7a1f1f;">🗑️ Vaciar ficha actual</button>
+      <button class="tiny-btn" id="deleteAllSheetsBtn" style="background:#7a1f1f;color:#fff;border-color:#7a1f1f;">🗑️ Borrar todas las fichas</button>
+    </div>
+    <div style="display:flex;gap:5px;margin-top:10px;">
+      <button class="export-btn export-btn-sm" id="btnExportPng" style="background:#33322c;" title="Exportar como imágenes PNG sueltas">PNG</button>
+      <button class="export-btn export-btn-sm" id="btnExportWord" style="background:var(--accent);" title="Exportar como Word con texto editable">Word texto</button>
+      <button class="export-btn export-btn-sm" id="btnExportWordImages" style="background:#4a5a3a;" title="Exportar como Word con las fichas pegadas como imágenes">Word imág.</button>
+    </div>
+    <div class="hint">PNG: si hay varias marcadas, se descargan juntas en un .zip (un archivo por ficha); si solo hay una, directa. Word con texto y Word con imágenes: siempre generan un único documento con todas las fichas marcadas (los personajes van primero, luego las unidades).</div>
+  </details>
+
+  <details class="fieldset-collapse" open>
+    <summary>Cabecera</summary>
+    <label>Nombre de la unidad (título grande)</label>
+    <input type="text" id="title" value="Nueva ficha">
+    <label>Nombre en la barra</label>
+    <input type="text" id="uname" value="Nueva ficha">
+    <div class="row2">
+      <div>
+        <label>Puntos por miniatura</label>
+        <input type="number" id="pts" value="">
+      </div>
+      <div id="sizeFieldWrap">
+        <label>Tamaño de la unidad</label>
+        <input type="text" id="size" value="">
+      </div>
+    </div>
+  </details>
+
+  <details class="fieldset-collapse" id="monturaFieldset" style="display:none;" open>
+    <summary>Montura</summary>
+    <div id="monturaRows"></div>
+    <button class="small-btn" id="addMonturaBtn">+ Añadir montura</button>
+    <div class="hint">Añade las monturas disponibles para este personaje, con su coste en puntos.</div>
+  </details>
+
+  <details class="fieldset-collapse" open>
+    <summary>Ilustración</summary>
+    <label>Imagen de la miniatura / unidad</label>
+    <input type="file" id="illuFile" accept="image/*">
+    <div class="hint">Tamaño recomendado: 600 × 800&nbsp;px (formato vertical, relación 3:4). La imagen nunca se recorta, siempre se ve entera. Se comprime automáticamente al subirla para que el archivo pese poco.</div>
+    <label>Tamaño: <span id="illuZoomLabel">34%</span> del ancho de la ficha</label>
+    <input type="range" id="illuZoomRange" min="10" max="90" step="2" value="34" style="width:100%;">
+    <label style="margin-top:8px;">Brillo: <span id="illuBrightnessLabel">100%</span></label>
+    <input type="range" id="illuBrightnessRange" min="40" max="180" step="5" value="100" style="width:100%;">
+    <button class="tiny-btn" id="illuResetBtn" style="margin-top:6px;">Restablecer encuadre</button>
+    <button class="tiny-btn" id="illuRemoveBtn" style="margin-top:6px;background:#7a1f1f;color:#fff;border-color:#7a1f1f;">🗑️ Quitar imagen</button>
+    <div class="hint">Arrastra la imagen libremente por toda la ficha (incluso encima del texto) para colocarla donde quieras.</div>
+
+    <label style="margin-top:12px;">O genera imágenes de referencia con IA</label>
+    <input type="text" id="illuPromptInput" placeholder="Ej. alimaña skaven con daga, deja vacío para usar el nombre de la ficha">
+    <button class="small-btn" id="illuGenBtn" style="margin-top:6px;">🎲 Generar 3 variantes</button>
+    <div id="illuGenResults"></div>
+    <div class="hint">Usa un servicio externo gratuito (Pollinations.ai) para generar bocetos con fondo blanco a partir del texto. Es experimental: puede tardar unos segundos o fallar alguna vez. Haz clic en una imagen para usarla en esta ficha.</div>
+  </details>
+
+  <details class="fieldset-collapse" open>
+    <summary>Perfiles de características</summary>
+    <div class="stat-head">
+      <div>Perfil</div><div>M</div><div>HA</div><div>HP</div><div>F</div><div>R</div><div>H</div><div>I</div><div>A</div><div>L</div><div></div><div></div>
+    </div>
+    <div id="statRows"></div>
+    <button class="small-btn" id="addStat">+ Añadir perfil</button>
+    <div class="hint">Arrastra una fila por el icono ⠿ para reordenarla. El icono ⧉ duplica el perfil.</div>
+  </details>
+
+  <details class="fieldset-collapse" open>
+    <summary>Equipo</summary>
+    <label>Descripción del equipo (separa con comas)</label>
+    <textarea id="equipo"></textarea>
+  </details>
+
+  <details class="fieldset-collapse" open>
+    <summary>Opciones</summary>
+    <div id="optRows"></div>
+    <button class="small-btn" id="addOpt">+ Añadir opción</button>
+    <div class="hint">Arrastra por el icono ⠿ para reordenar las opciones.</div>
+  </details>
+
+  <details class="fieldset-collapse" open>
+    <summary>Grupo de mando</summary>
+    <div class="row2">
+      <div>
+        <label>Músico (+puntos)</label>
+        <input type="number" id="cmdMusico" placeholder="ej. 5" value="">
+      </div>
+      <div>
+        <label>Portaestandarte (+puntos)</label>
+        <input type="number" id="cmdPortaestandarte" placeholder="ej. 10" value="">
+      </div>
+    </div>
+    <div class="row2">
+      <div>
+        <label>Nombre del campeón</label>
+        <input type="text" id="cmdCampeonNombre" placeholder="ej. Jefe de Garra" value="">
+      </div>
+      <div>
+        <label>Campeón (+puntos)</label>
+        <input type="number" id="cmdCampeonPts" placeholder="ej. 10" value="">
+      </div>
+    </div>
+    <div class="hint">Deja un campo de puntos vacío para que esa opción no aparezca en la ficha.</div>
+  </details>
+
+  <details class="fieldset-collapse" open>
+    <summary>Reglas especiales</summary>
+    <label>Nombres de las reglas (separa con comas, se mostrarán en cursiva)</label>
+    <textarea id="rules"></textarea>
+    <div class="hint">Puedes pulsar Intro para crear varias líneas (por ejemplo, para maquetar el texto alrededor de la ilustración); dentro de cada línea, las reglas separadas por comas se siguen juntando igual.</div>
+  </details>
+
+  <div class="export-bar">
+    <button class="export-btn" id="btnDocSummary">📋 Generar resumen de perfiles de unidades</button>
+  </div>
+
+  </div>
+</div>
+
+<div class="resize-handle" id="resizeHandle"></div>
+
+<div class="stage">
+  <div id="card" class="grayscale-view no-frame">
+    <div class="title" id="outTitle">Nueva ficha</div>
+    <div class="subbar">
+      <div class="logo" id="outLogo"></div>
+      <div class="uname" id="outUname">Nueva ficha</div>
+      <div class="pts" id="outPts">puntos por miniatura: 20</div>
+    </div>
+    <div class="content-wrap">
+      <div class="left-col">
+        <table class="stats" id="statsTable"></table>
+        <div class="field" id="outSizeWrap"><b>Tamaño de la unidad:</b> <span id="outSize">5-15</span></div>
+        <div class="field"><b>Equipo:</b> <span id="outEquipo"></span></div>
+        <div class="field" id="outMonturaWrap" style="display:none;">
+          <div class="opt-title">Montura:</div>
+          <ul class="options" id="outMonturaList"></ul>
+        </div>
+        <div class="opt-title" id="outOptTitle">Opciones:</div>
+        <ul class="options" id="outOptions"></ul>
+        <div class="field" id="outCmdWrap"><b>Grupo de mando:</b> <span id="outCmd"></span></div>
+        <div class="rules-title">Reglas especiales:</div>
+        <div class="rules-text" id="outRules"></div>
+      </div>
+      <div class="illu-layer">
+        <div class="illustration" id="outIllu">
+          <div class="illu-ph"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const statHeaders = ["M","HA","HP","F","R","H","I","A","L"];
+let idCounter = 1;
+function newId(prefix){ return prefix + (idCounter++); }
+
+let statProfiles = [
+  {name:"Nuevo perfil", vals:["0","0","0","0","0","0","0","0","0"]}
+];
+
+let options = [];
+let armyLogoData = null;
+let illuData = null;
+let illuWidthPct = 34;
+let illuPosX = null;
+let illuPosY = null;
+let illuBrightness = 100;
+const CONTENT_W = 708; /* ancho útil de la ficha: 760px de tarjeta menos 26px de margen a cada lado */
+const ILLU_DEFAULT_W_PCT = 34;
+let currentPreset = 'bretonia';
+let sheets = [];
+let currentSheetIndex = -1;
+let grayscaleMode = true;
+let showFrame = false;
+let cardMaxHeight = 800; /* alto máximo de la ficha en px, por ficha (450-800) */
+const CARD_HEIGHT_DEFAULT = 800;
+let sheetType = 'unidad'; /* 'unidad' o 'personaje' */
+let monturas = []; /* solo se usa en hojas de personaje: [{name, pts}] */
+
+const PRESETS = {
+  bretonia: {label:'Bretonia', bar:'#d9d5c6', barBorder:'#7d795f', accent:'#7a1f1f'},
+  imperio:  {label:'Imperio',  bar:'#c7cdd6', barBorder:'#5c6a78', accent:'#8a6d2f'},
+  orcos:    {label:'Orcos y Trasgos', bar:'#b9c79a', barBorder:'#5a6a3e', accent:'#3c4a1e'}
+};
+
+function applyPreset(key){
+  const p = PRESETS[key];
+  if(!p) return;
+  currentPreset = key;
+  const root = document.documentElement.style;
+  root.setProperty('--paper', '#ffffff');
+  root.setProperty('--bar-gray', p.bar);
+  root.setProperty('--bar-border', p.barBorder);
+  root.setProperty('--accent', p.accent);
+}
+
+/* ---------- grayscale toggle ---------- */
+document.getElementById('btnGrayscale').addEventListener('click', ()=>{
+  grayscaleMode = !grayscaleMode;
+  const btn = document.getElementById('btnGrayscale');
+  const card = document.getElementById('card');
+  if(grayscaleMode){
+    card.classList.add('grayscale-view');
+    btn.textContent = '🎨 Ver a color';
+  }else{
+    card.classList.remove('grayscale-view');
+    btn.textContent = '⚫ Ver en blanco y negro';
+  }
+});
+
+document.getElementById('btnFrame').addEventListener('click', ()=>{
+  showFrame = !showFrame;
+  const btn = document.getElementById('btnFrame');
+  const card = document.getElementById('card');
+  if(showFrame){
+    card.classList.remove('no-frame');
+    btn.textContent = '🖼️ Quitar marco';
+  }else{
+    card.classList.add('no-frame');
+    btn.textContent = '🖼️ Añadir marco';
+  }
+});
+
+function applyCardMaxHeight(){
+  const card = document.getElementById('card');
+  const label = document.getElementById('cardHeightLabel');
+  const range = document.getElementById('cardHeightRange');
+  card.style.maxHeight = cardMaxHeight + 'px';
+  card.style.overflow = 'hidden';
+  if(label) label.textContent = cardMaxHeight + ' px';
+  if(range) range.value = cardMaxHeight;
+}
+
+document.getElementById('cardHeightRange').addEventListener('input', function(){
+  cardMaxHeight = parseInt(this.value, 10);
+  applyCardMaxHeight();
+  syncCurrentSheet();
+});
+
+document.getElementById('cardHeightAutoBtn').addEventListener('click', ()=>{
+  cardMaxHeight = CARD_HEIGHT_DEFAULT;
+  applyCardMaxHeight();
+  syncCurrentSheet();
+});
+
+function grayscaleImageData(dataUrl){
+  return new Promise(resolve=>{
+    if(!dataUrl){ resolve(dataUrl); return; }
+    const img = new Image();
+    img.onload = ()=>{
+      const c = document.createElement('canvas');
+      c.width = img.naturalWidth || 1;
+      c.height = img.naturalHeight || 1;
+      const ctx = c.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      try{
+        const id = ctx.getImageData(0, 0, c.width, c.height);
+        const d = id.data;
+        for(let i=0;i<d.length;i+=4){
+          const gray = 0.299*d[i] + 0.587*d[i+1] + 0.114*d[i+2];
+          d[i]=d[i+1]=d[i+2]=gray;
+        }
+        ctx.putImageData(id, 0, 0);
+        resolve(c.toDataURL('image/png'));
+      }catch(err){
+        resolve(dataUrl);
+      }
+    };
+    img.onerror = ()=> resolve(dataUrl);
+    img.src = dataUrl;
+  });
+}
+
+/* Word ignora el filter:brightness() de CSS, así que para esa exportación
+   "horneamos" el brillo directamente en los píxeles de la imagen. */
+function adjustImageBrightness(dataUrl, brightnessPct){
+  return new Promise(resolve=>{
+    if(!dataUrl || !brightnessPct || brightnessPct === 100){ resolve(dataUrl); return; }
+    const img = new Image();
+    img.onload = ()=>{
+      const c = document.createElement('canvas');
+      c.width = img.naturalWidth || 1;
+      c.height = img.naturalHeight || 1;
+      const ctx = c.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      try{
+        const id = ctx.getImageData(0, 0, c.width, c.height);
+        const d = id.data;
+        const factor = brightnessPct / 100;
+        for(let i=0;i<d.length;i+=4){
+          d[i] = Math.max(0, Math.min(255, d[i]*factor));
+          d[i+1] = Math.max(0, Math.min(255, d[i+1]*factor));
+          d[i+2] = Math.max(0, Math.min(255, d[i+2]*factor));
+        }
+        ctx.putImageData(id, 0, 0);
+        resolve(c.toDataURL('image/png'));
+      }catch(err){
+        resolve(dataUrl);
+      }
+    };
+    img.onerror = ()=> resolve(dataUrl);
+    img.src = dataUrl;
+  });
+}
+
+/* ---------- stat profile rows rendering ---------- */
+function renderStatRows(){
+  const box = document.getElementById('statRows');
+  box.innerHTML = '';
+  statProfiles.forEach((p, i)=>{
+    const row = document.createElement('div');
+    row.className = 'stat-row';
+    row.draggable = true;
+    row.dataset.index = i;
+    row.innerHTML = `<input class="name" data-i="${i}" data-f="name" value="${escAttr(p.name)}">` +
+      p.vals.map((v,j)=>`<input data-i="${i}" data-j="${j}" value="${escAttr(v)}">`).join('') +
+      `<button class="icon-btn" data-dup="${i}" title="Duplicar perfil">⧉</button>` +
+      `<button class="del-btn" data-del="${i}" title="Eliminar perfil">🗑</button>`;
+    box.appendChild(row);
+  });
+  box.querySelectorAll('input[data-f="name"]').forEach(inp=>{
+    inp.addEventListener('input', e=>{ statProfiles[e.target.dataset.i].name = e.target.value; update(); });
+  });
+  box.querySelectorAll('input[data-j]').forEach(inp=>{
+    inp.addEventListener('input', e=>{
+      statProfiles[e.target.dataset.i].vals[e.target.dataset.j] = e.target.value; update();
+    });
+  });
+  box.querySelectorAll('[data-del]').forEach(btn=>{
+    btn.addEventListener('click', e=>{
+      statProfiles.splice(parseInt(e.target.dataset.del),1);
+      renderStatRows(); update();
+    });
+  });
+  box.querySelectorAll('[data-dup]').forEach(btn=>{
+    btn.addEventListener('click', e=>{
+      const idx = parseInt(e.target.dataset.dup);
+      const copy = JSON.parse(JSON.stringify(statProfiles[idx]));
+      copy.name = copy.name + ' (copia)';
+      statProfiles.splice(idx+1, 0, copy);
+      renderStatRows(); update();
+    });
+  });
+  addDragHandlers(box, '.stat-row', statProfiles, ()=>{ renderStatRows(); update(); });
+}
+
+document.getElementById('addStat').addEventListener('click', ()=>{
+  statProfiles.push({name:'Nuevo perfil', vals:['0','0','0','0','0','0','0','0','0']});
+  renderStatRows(); update();
+});
+
+
+/* ---------- options rendering ---------- */
+function renderOptRows(){
+  const box = document.getElementById('optRows');
+  box.innerHTML = '';
+  options.forEach((o,i)=>{
+    const row = document.createElement('div');
+    row.className = 'opt-row';
+    row.draggable = true;
+    row.dataset.index = i;
+    row.innerHTML = `<span class="drag-dot">⠿</span><input value="${escAttr(o)}" data-i="${i}"><button class="del-btn" data-delo="${i}" title="Eliminar opción">🗑</button>`;
+    box.appendChild(row);
+  });
+  box.querySelectorAll('input[data-i]').forEach(inp=>{
+    inp.addEventListener('input', e=>{ options[e.target.dataset.i] = e.target.value; update(); });
+  });
+  box.querySelectorAll('[data-delo]').forEach(btn=>{
+    btn.addEventListener('click', e=>{
+      options.splice(parseInt(e.target.dataset.delo),1);
+      renderOptRows(); update();
+    });
+  });
+  addDragHandlers(box, '.opt-row', options, ()=>{ renderOptRows(); update(); });
+}
+
+function renderMonturaRows(){
+  const box = document.getElementById('monturaRows');
+  if(!box) return;
+  box.innerHTML = '';
+  monturas.forEach((m,i)=>{
+    const row = document.createElement('div');
+    row.className = 'montura-row';
+    row.innerHTML = `<input class="montura-name" placeholder="Nombre de la montura" value="${escAttr(m.name||'')}" data-mi="${i}">` +
+      `<input class="montura-pts" type="number" placeholder="Puntos" value="${escAttr(m.pts||'')}" data-mp="${i}">` +
+      `<button class="del-btn" data-mdel="${i}" title="Eliminar montura">🗑</button>`;
+    box.appendChild(row);
+  });
+  box.querySelectorAll('[data-mi]').forEach(inp=>{
+    inp.addEventListener('input', e=>{ monturas[e.target.dataset.mi].name = e.target.value; update(); });
+  });
+  box.querySelectorAll('[data-mp]').forEach(inp=>{
+    inp.addEventListener('input', e=>{ monturas[e.target.dataset.mp].pts = e.target.value; update(); });
+  });
+  box.querySelectorAll('[data-mdel]').forEach(btn=>{
+    btn.addEventListener('click', e=>{
+      monturas.splice(parseInt(e.target.dataset.mdel),1);
+      renderMonturaRows(); update();
+    });
+  });
+}
+
+function addDragHandlers(box, selector, arr, onDone){
+  let dragIndex = null;
+  box.querySelectorAll(selector).forEach(row=>{
+    row.addEventListener('dragstart', e=>{
+      dragIndex = parseInt(row.dataset.index);
+      row.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    row.addEventListener('dragend', ()=> row.classList.remove('dragging'));
+    row.addEventListener('dragover', e=> e.preventDefault());
+    row.addEventListener('drop', e=>{
+      e.preventDefault();
+      const dropIndex = parseInt(row.dataset.index);
+      if(dragIndex === null || dragIndex === dropIndex) return;
+      const moved = arr.splice(dragIndex,1)[0];
+      arr.splice(dropIndex,0,moved);
+      dragIndex = null;
+      onDone();
+    });
+  });
+}
+
+function escAttr(s){ return String(s).replace(/"/g,'&quot;'); }
+function escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+/* Formatea "Reglas especiales": dentro de cada línea sigue uniendo por comas
+   con un espacio (como siempre), pero ahora respeta los saltos de línea que
+   el usuario escriba a propósito (para poder maquetar el texto alrededor
+   de la ilustración si quiere). */
+function formatRulesText(raw){
+  return (raw||'').split('\n').map(line=>
+    line.split(',').map(x=>x.trim()).filter(Boolean).join(', ')
+  ).join('\n');
+}
+
+function grupoMandoText(musico, portaestandarte, campeonNombre, campeonPts){
+  const parts = [];
+  if(musico !== '' && musico !== null && musico !== undefined){
+    parts.push(`Músico (+${musico})`);
+  }
+  if(portaestandarte !== '' && portaestandarte !== null && portaestandarte !== undefined){
+    parts.push(`Portaestandarte (+${portaestandarte})`);
+  }
+  if(campeonPts !== '' && campeonPts !== null && campeonPts !== undefined){
+    const label = (campeonNombre && campeonNombre.trim()) ? campeonNombre.trim() : 'Campeón';
+    parts.push(`${label} (+${campeonPts})`);
+  }
+  return parts.join(', ');
+}
+
+function monturaItems(list){
+  return (list||[]).filter(m => m.name && m.name.trim()).map(m=>{
+    const pts = (m.pts !== undefined && m.pts !== null && m.pts !== '') ? ` (+${m.pts})` : '';
+    return `${m.name.trim()}${pts}`;
+  });
+}
+
+function monturaText(list){
+  return monturaItems(list).join(', ');
+}
+
+function buildStatsTableInnerHtml(profs){
+  let thead = '<tr><th></th>' + statHeaders.map(h=>`<th>${h}</th>`).join('') + '</tr>';
+  let rows = profs.map(p=>{
+    return '<tr><td>'+escHtml(p.name)+'</td>' + p.vals.map(v=>`<td>${escHtml(v)}</td>`).join('') + '</tr>';
+  }).join('');
+  return thead + rows;
+}
+
+function update(){
+  document.getElementById('outTitle').textContent = document.getElementById('title').value;
+  document.getElementById('outUname').textContent = document.getElementById('uname').value;
+  document.getElementById('outPts').textContent = 'puntos por miniatura: ' + document.getElementById('pts').value;
+  document.getElementById('outEquipo').textContent = document.getElementById('equipo').value;
+
+  document.getElementById('sizeFieldWrap').style.display = sheetType === 'personaje' ? 'none' : '';
+  document.getElementById('monturaFieldset').style.display = sheetType === 'personaje' ? '' : 'none';
+  if(sheetType === 'personaje'){
+    document.getElementById('outSizeWrap').style.display = 'none';
+    const mItems = monturaItems(monturas);
+    const monturaList = document.getElementById('outMonturaList');
+    monturaList.innerHTML = mItems.map(m => `<li>${escHtml(m)}</li>`).join('');
+    document.getElementById('outMonturaWrap').style.display = mItems.length ? '' : 'none';
+  }else{
+    document.getElementById('outSize').textContent = document.getElementById('size').value;
+    document.getElementById('outSizeWrap').style.display = '';
+    document.getElementById('outMonturaWrap').style.display = 'none';
+  }
+
+  const rulesFormatted = formatRulesText(document.getElementById('rules').value);
+  document.getElementById('outRules').textContent = rulesFormatted;
+
+  const optBox = document.getElementById('outOptions');
+  const validOptions = options.filter(o=>o.trim());
+  optBox.innerHTML = validOptions.map(o=>`<li>${escHtml(o)}</li>`).join('');
+  const optDisplay = validOptions.length ? '' : 'none';
+  document.getElementById('outOptTitle').style.display = optDisplay;
+  optBox.style.display = optDisplay;
+
+  const cmdText = grupoMandoText(
+    document.getElementById('cmdMusico').value,
+    document.getElementById('cmdPortaestandarte').value,
+    document.getElementById('cmdCampeonNombre').value,
+    document.getElementById('cmdCampeonPts').value
+  );
+  document.getElementById('outCmd').textContent = cmdText;
+  document.getElementById('outCmdWrap').style.display = cmdText ? '' : 'none';
+
+  document.getElementById('statsTable').innerHTML = buildStatsTableInnerHtml(statProfiles);
+
+  const logoBox = document.getElementById('outLogo');
+  logoBox.innerHTML = armyLogoData ? `<img src="${armyLogoData}">` : '';
+
+  const illuLayer = document.querySelector('.illu-layer');
+  const illuBox = document.getElementById('outIllu');
+  if(illuData){
+    illuBox.innerHTML = `<img src="${illuData}" style="filter:brightness(${illuBrightness}%);">`;
+    illuBox.classList.add('has-image');
+    const w = illuWidthPx();
+    illuBox.style.width = w + 'px';
+    ensureIlluDefaultPos();
+    illuBox.style.left = (illuPosX || 0) + 'px';
+    illuBox.style.top = (illuPosY || 0) + 'px';
+    const imgEl = illuBox.querySelector('img');
+    if(imgEl && imgEl.complete && imgEl.naturalWidth){
+      /* la imagen ya está decodificada: podemos recortar los límites con
+         medidas reales sin riesgo de adivinar mal la altura. */
+      clampIlluPos(illuLayer ? illuLayer.clientHeight : 0);
+      illuBox.style.left = (illuPosX || 0) + 'px';
+      illuBox.style.top = (illuPosY || 0) + 'px';
+    }else if(imgEl){
+      /* todavía no sabemos el ancho/alto reales: NO recortamos ahora (eso
+         podía "adivinar" una altura equivocada y desplazar la posición
+         guardada). Esperamos a que cargue para hacerlo con datos reales. */
+      imgEl.addEventListener('load', ()=>{
+        clampIlluPos(illuLayer ? illuLayer.clientHeight : 0);
+        illuBox.style.left = (illuPosX || 0) + 'px';
+        illuBox.style.top = (illuPosY || 0) + 'px';
+      }, {once:true});
+    }
+  }else{
+    illuBox.innerHTML = '<div class="illu-ph"></div>';
+    illuBox.classList.remove('has-image');
+    illuBox.style.width = 'auto';
+    illuBox.style.left = Math.max(0, CONTENT_W - 249) + 'px';
+    illuBox.style.top = '0px';
+  }
+  syncIlluZoomUI();
+
+  syncCurrentSheet();
+}
+
+['title','uname','pts','size','equipo','rules','cmdMusico','cmdPortaestandarte','cmdCampeonNombre','cmdCampeonPts'].forEach(id=>{
+  document.getElementById(id).addEventListener('input', update);
+});
+
+document.getElementById('addOpt').addEventListener('click', ()=>{
+  options.push('Nueva opción');
+  renderOptRows(); update();
+});
+
+document.getElementById('addMonturaBtn').addEventListener('click', ()=>{
+  monturas.push({name:'Nueva montura', pts:''});
+  renderMonturaRows(); update();
+});
+
+/* Redimensiona y recodifica una imagen para que el .json pese mucho menos,
+   sin depender de archivos externos: sigue quedando embebida en base64,
+   pero ya comprimida. */
+function compressImageFile(file, maxWidth, maxHeight, mimeType, quality){
+  return new Promise((resolve, reject)=>{
+    const reader = new FileReader();
+    reader.onload = e=>{
+      const img = new Image();
+      img.onload = ()=>{
+        let w = img.naturalWidth, h = img.naturalHeight;
+        const ratio = Math.min(1, maxWidth / w, maxHeight / h);
+        w = Math.max(1, Math.round(w * ratio));
+        h = Math.max(1, Math.round(h * ratio));
+        const c = document.createElement('canvas');
+        c.width = w; c.height = h;
+        const ctx = c.getContext('2d');
+        if(mimeType === 'image/jpeg'){
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, w, h);
+        }
+        ctx.drawImage(img, 0, 0, w, h);
+        resolve(c.toDataURL(mimeType, quality));
+      };
+      img.onerror = reject;
+      img.src = e.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+async function handleImageUpload(input, maxWidth, maxHeight, mimeType, quality, onDone){
+  const f = input.files[0];
+  if(!f) return;
+  try{
+    const dataUrl = await compressImageFile(f, maxWidth, maxHeight, mimeType, quality);
+    onDone(dataUrl);
+  }catch(err){
+    console.error(err);
+    alert('No se ha podido procesar esa imagen. Inténtalo con otro archivo.');
+  }
+}
+
+document.getElementById('logoFile').addEventListener('change', function(){
+  handleImageUpload(this, 200, 200, 'image/png', 1, data => { armyLogoData = data; update(); });
+  this.value = '';
+});
+document.getElementById('illuFile').addEventListener('change', function(){
+  handleImageUpload(this, 900, 1200, 'image/jpeg', 0.85, data => {
+    illuData = data;
+    illuWidthPct = ILLU_DEFAULT_W_PCT;
+    illuPosX = null; illuPosY = null; /* se recalcula la posición por defecto al renderizar */
+    illuBrightness = 100;
+    update();
+  });
+  this.value = '';
+});
+
+/* ---------- generar imágenes de referencia con IA (servicio externo gratuito, sin clave) ---------- */
+const ILLU_GEN_STYLES = [
+  'ilustración digital detallada', 'pintura al óleo', 'estilo acuarela',
+  'arte conceptual de fantasía', 'estilo grabado a tinta', 'render 3D estilizado',
+  'arte de libro de reglas de rol'
+];
+
+document.getElementById('illuGenBtn').addEventListener('click', async ()=>{
+  const btn = document.getElementById('illuGenBtn');
+  const resultsBox = document.getElementById('illuGenResults');
+  const baseText = document.getElementById('illuPromptInput').value.trim() || document.getElementById('title').value || 'criatura de fantasía';
+  const original = btn.textContent;
+  btn.textContent = 'Generando (puede tardar unos segundos)...';
+  btn.disabled = true;
+  resultsBox.innerHTML = '<div class="illu-gen-loading">Generando 3 variantes con un servicio externo gratuito...</div>';
+  try{
+    const attempts = await Promise.allSettled([0,1,2].map(async ()=>{
+      const style = ILLU_GEN_STYLES[Math.floor(Math.random()*ILLU_GEN_STYLES.length)];
+      const seed = Math.floor(Math.random()*1000000);
+      const prompt = `${baseText}, ${style}, fondo blanco liso, sin sombras, iluminación de estudio, ilustración de miniatura de wargame de fantasía, alta calidad`;
+      const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=512&height=683&seed=${seed}&nologo=true&model=flux`;
+      const resp = await fetch(url);
+      if(!resp.ok) throw new Error('HTTP ' + resp.status);
+      const blob = await resp.blob();
+      if(!blob.type.startsWith('image/')) throw new Error('respuesta no es una imagen (' + blob.type + ')');
+      return blob;
+    }));
+    resultsBox.innerHTML = '';
+    const okBlobs = attempts.filter(a => a.status === 'fulfilled').map(a => a.value);
+    const errors = attempts.filter(a => a.status === 'rejected').map(a => a.reason && a.reason.message);
+    okBlobs.forEach(blob=>{
+      const objUrl = URL.createObjectURL(blob);
+      const thumb = document.createElement('img');
+      thumb.src = objUrl;
+      thumb.className = 'illu-gen-thumb';
+      thumb.title = 'Haz clic para usar esta imagen';
+      thumb.addEventListener('click', async ()=>{
+        const dataUrl = await compressImageFile(blob, 900, 1200, 'image/jpeg', 0.85);
+        illuData = dataUrl;
+        illuWidthPct = ILLU_DEFAULT_W_PCT;
+        illuPosX = null; illuPosY = null;
+        illuBrightness = 100;
+        update();
+      });
+      resultsBox.appendChild(thumb);
+    });
+    if(okBlobs.length === 0){
+      resultsBox.innerHTML = '<div class="illu-gen-loading">No se ha podido generar ninguna imagen (' + (errors[0] || 'error desconocido') + '). Inténtalo de nuevo en unos segundos.</div>';
+    }else if(errors.length){
+      resultsBox.insertAdjacentHTML('beforeend', '<div class="illu-gen-loading" style="width:100%;">' + okBlobs.length + ' de 3 generadas; ' + errors.length + ' fallaron.</div>');
+    }
+  }catch(err){
+    console.error(err);
+    resultsBox.innerHTML = '';
+    alert('No se han podido generar imágenes ahora mismo (' + (err && err.message ? err.message : 'error desconocido') + '). Es un servicio externo gratuito y puede fallar o tardar; inténtalo de nuevo en unos segundos.');
+  }finally{
+    btn.textContent = original;
+    btn.disabled = false;
+  }
+});
+
+/* ---------- ilustración: tamaño y posición libres, siempre entera ---------- */
+function syncIlluZoomUI(){
+  const range = document.getElementById('illuZoomRange');
+  const label = document.getElementById('illuZoomLabel');
+  if(range) range.value = illuWidthPct;
+  if(label) label.textContent = illuWidthPct + '%';
+  const bRange = document.getElementById('illuBrightnessRange');
+  const bLabel = document.getElementById('illuBrightnessLabel');
+  if(bRange) bRange.value = illuBrightness;
+  if(bLabel) bLabel.textContent = illuBrightness + '%';
+}
+
+function illuWidthPx(){
+  return Math.round(CONTENT_W * illuWidthPct / 100);
+}
+
+/* Si no hay posición guardada (imagen nueva o ficha recién cargada), la coloca
+   por defecto arriba a la derecha, un poco por encima del borde del texto,
+   como en el diseño original. */
+const ILLU_MIN_Y = -40; /* cuánto se puede subir por encima del borde del texto */
+
+function ensureIlluDefaultPos(){
+  const w = illuWidthPx();
+  if(illuPosX === null || illuPosX === undefined) illuPosX = Math.max(0, CONTENT_W - w);
+  if(illuPosY === null || illuPosY === undefined) illuPosY = -20;
+}
+
+function clampIlluPos(layerH){
+  const w = illuWidthPx();
+  const img = document.querySelector('#outIllu img');
+  const h = img && img.naturalWidth ? w * (img.naturalHeight / img.naturalWidth) : w;
+  const maxX = Math.max(0, CONTENT_W - w);
+  const maxY = Math.max(ILLU_MIN_Y, (layerH || 0) - h);
+  illuPosX = Math.max(0, Math.min(maxX, illuPosX || 0));
+  illuPosY = Math.max(ILLU_MIN_Y, Math.min(maxY, illuPosY || 0));
+}
+
+document.getElementById('illuZoomRange').addEventListener('input', function(){
+  illuWidthPct = parseInt(this.value, 10);
+  const layer = document.querySelector('.illu-layer');
+  clampIlluPos(layer ? layer.clientHeight : 0);
+  syncIlluZoomUI();
+  update();
+});
+
+document.getElementById('illuBrightnessRange').addEventListener('input', function(){
+  illuBrightness = parseInt(this.value, 10);
+  syncIlluZoomUI();
+  update();
+});
+
+document.getElementById('illuResetBtn').addEventListener('click', ()=>{
+  illuWidthPct = ILLU_DEFAULT_W_PCT;
+  illuPosX = null; illuPosY = null;
+  illuBrightness = 100;
+  update();
+});
+
+document.getElementById('illuRemoveBtn').addEventListener('click', ()=>{
+  if(!illuData) return;
+  if(!confirm('¿Quitar la imagen de esta ficha?')) return;
+  illuData = null;
+  illuWidthPct = ILLU_DEFAULT_W_PCT;
+  illuPosX = null; illuPosY = null;
+  illuBrightness = 100;
+  update();
+});
+
+(function(){
+  const box = document.getElementById('outIllu');
+  let dragging = false, startX = 0, startY = 0, startPosX = 0, startPosY = 0;
+
+  box.addEventListener('pointerdown', e=>{
+    if(!illuData) return;
+    dragging = true;
+    startX = e.clientX; startY = e.clientY;
+    startPosX = illuPosX || 0; startPosY = illuPosY || 0;
+    box.classList.add('dragging');
+    box.setPointerCapture(e.pointerId);
+  });
+  box.addEventListener('pointermove', e=>{
+    if(!dragging) return;
+    const dx = e.clientX - startX, dy = e.clientY - startY;
+    illuPosX = startPosX + dx;
+    illuPosY = startPosY + dy;
+    const layer = box.closest('.illu-layer');
+    clampIlluPos(layer ? layer.clientHeight : 0);
+    box.style.left = illuPosX + 'px';
+    box.style.top = illuPosY + 'px';
+  });
+  function endDrag(){
+    if(!dragging) return;
+    dragging = false;
+    box.classList.remove('dragging');
+    syncCurrentSheet();
+  }
+  box.addEventListener('pointerup', endDrag);
+  box.addEventListener('pointercancel', endDrag);
+})();
+
+/* ---------- collect / apply state ---------- */
+function collectState(){
+  return {
+    title: document.getElementById('title').value,
+    uname: document.getElementById('uname').value,
+    pts: document.getElementById('pts').value,
+    size: document.getElementById('size').value,
+    equipo: document.getElementById('equipo').value,
+    rules: document.getElementById('rules').value,
+    cmdMusico: document.getElementById('cmdMusico').value,
+    cmdPortaestandarte: document.getElementById('cmdPortaestandarte').value,
+    cmdCampeonNombre: document.getElementById('cmdCampeonNombre').value,
+    cmdCampeonPts: document.getElementById('cmdCampeonPts').value,
+    statProfiles: JSON.parse(JSON.stringify(statProfiles)),
+    options: JSON.parse(JSON.stringify(options)),
+    illuData,
+    illuWidthPct, illuPosX, illuPosY, illuBrightness,
+    preset: currentPreset,
+    sheetType,
+    monturas: JSON.parse(JSON.stringify(monturas)),
+    cardMaxHeight
+  };
+}
+
+function applyState(s){
+  document.getElementById('title').value = s.title ?? '';
+  document.getElementById('uname').value = s.uname ?? '';
+  document.getElementById('pts').value = s.pts ?? '';
+  document.getElementById('size').value = s.size ?? '';
+  document.getElementById('equipo').value = s.equipo ?? '';
+  document.getElementById('rules').value = s.rules ?? '';
+  document.getElementById('cmdMusico').value = s.cmdMusico ?? '';
+  document.getElementById('cmdPortaestandarte').value = s.cmdPortaestandarte ?? '';
+  document.getElementById('cmdCampeonNombre').value = s.cmdCampeonNombre ?? '';
+  document.getElementById('cmdCampeonPts').value = s.cmdCampeonPts ?? '';
+
+  if(s.statProfiles){
+    statProfiles = s.statProfiles;
+  }else if(s.profiles){
+    /* migration from the profiles-with-icon format used briefly before */
+    statProfiles = [];
+    s.profiles.forEach(p=>{
+      (p.units||[]).forEach(u=> statProfiles.push({name:u.name, vals:u.vals}));
+    });
+  }else{
+    statProfiles = [];
+  }
+  /* Ajusta cada perfil para que tenga exactamente tantos valores como
+     atributos hay (statHeaders.length): rellena si faltan (fichas viejas)
+     y recorta si sobran (por ejemplo, restos del atributo TS eliminado). */
+  statProfiles.forEach(p=>{
+    if(!Array.isArray(p.vals)) p.vals = [];
+    while(p.vals.length < statHeaders.length) p.vals.push('');
+    if(p.vals.length > statHeaders.length) p.vals.length = statHeaders.length;
+  });
+  options = s.options || [];
+  monturas = s.monturas || [];
+  sheetType = s.sheetType === 'personaje' ? 'personaje' : 'unidad';
+  syncTypeSwitchUI();
+  if(!armyLogoData && s.logoData) armyLogoData = s.logoData; /* migration from old per-sheet logo */
+  illuData = s.illuData || null;
+  illuWidthPct = (s.illuWidthPct != null) ? s.illuWidthPct : ILLU_DEFAULT_W_PCT;
+  illuBrightness = (s.illuBrightness != null) ? s.illuBrightness : 100;
+  illuPosX = (s.illuPosX != null) ? s.illuPosX : null;
+  illuPosY = (s.illuPosY != null) ? s.illuPosY : null;
+  cardMaxHeight = (s.cardMaxHeight != null) ? s.cardMaxHeight : CARD_HEIGHT_DEFAULT;
+  applyCardMaxHeight();
+  if(s.preset && PRESETS[s.preset]) applyPreset(s.preset);
+  renderStatRows(); renderOptRows(); renderMonturaRows(); update();
+}
+
+/* ---------- multi-sheet management ---------- */
+function makeBlankState(type){
+  const t = type === 'personaje' ? 'personaje' : 'unidad';
+  return {
+    title:'Nueva ficha', uname:'Nueva ficha', pts:'', size:'', equipo:'', rules:'',
+    cmdMusico:'', cmdPortaestandarte:'', cmdCampeonNombre:'', cmdCampeonPts:'',
+    statProfiles:[{name:'Nuevo perfil', vals:['0','0','0','0','0','0','0','0','0']}],
+    options:[], illuData:null, illuWidthPct:ILLU_DEFAULT_W_PCT, illuPosX:null, illuPosY:null, illuBrightness:100, preset:'bretonia',
+    sheetType:t, monturas:[], cardMaxHeight:CARD_HEIGHT_DEFAULT
+  };
+}
+
+function syncCurrentSheet(){
+  if(currentSheetIndex >= 0 && currentSheetIndex < sheets.length){
+    sheets[currentSheetIndex] = collectState();
+    const tab = document.querySelector(`.sheet-tab[data-idx="${currentSheetIndex}"] .sheet-tab-name`);
+    if(tab){
+      const icon = sheets[currentSheetIndex].sheetType === 'personaje' ? '🧙' : '📜';
+      tab.textContent = icon + ' ' + (sheets[currentSheetIndex].title || 'Sin título');
+    }
+  }
+}
+
+let exportChecks = [];
+
+let sheetDragIndex = null;
+
+function reorderSheets(fromIndex, toIndex){
+  if(fromIndex === toIndex) return;
+  const activeRef = sheets[currentSheetIndex];
+  const movedSheet = sheets.splice(fromIndex, 1)[0];
+  sheets.splice(toIndex, 0, movedSheet);
+  const movedCheck = exportChecks.splice(fromIndex, 1)[0];
+  exportChecks.splice(toIndex, 0, movedCheck);
+  currentSheetIndex = sheets.indexOf(activeRef);
+  renderSheetTabs();
+}
+
+function renderSheetTabs(){
+  const box = document.getElementById('sheetTabs');
+  if(!box) return;
+  while(exportChecks.length < sheets.length) exportChecks.push(true);
+  exportChecks.length = sheets.length;
+  box.innerHTML = '';
+  sheets.forEach((sh, i)=>{
+    const tab = document.createElement('div');
+    tab.className = 'sheet-tab' + (i === currentSheetIndex ? ' active' : '');
+    tab.dataset.idx = i;
+    tab.draggable = true;
+    tab.innerHTML = `<span class="drag-dot" title="Arrastra para reordenar">⠿</span>` +
+      `<input type="checkbox" data-check="${i}" ${exportChecks[i] ? 'checked' : ''} title="Incluir esta ficha al exportar">` +
+      `<span class="sheet-tab-name">${sh.sheetType === 'personaje' ? '🧙' : '📜'} ${escHtml(sh.title || 'Sin título')}</span>` +
+      `<button class="icon-btn" data-sdup="${i}" title="Duplicar ficha">⧉</button>` +
+      `<button class="del-btn" data-sdel="${i}" title="Eliminar ficha">🗑</button>`;
+    tab.addEventListener('click', e=>{
+      if(e.target.closest('button') || e.target.matches('input[type=checkbox]')) return;
+      switchToSheet(i);
+    });
+    tab.addEventListener('dragstart', e=>{
+      sheetDragIndex = i;
+      tab.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    tab.addEventListener('dragend', ()=> tab.classList.remove('dragging'));
+    tab.addEventListener('dragover', e=> e.preventDefault());
+    tab.addEventListener('drop', e=>{
+      e.preventDefault();
+      if(sheetDragIndex === null || sheetDragIndex === i) return;
+      reorderSheets(sheetDragIndex, i);
+      sheetDragIndex = null;
+    });
+    tab.querySelector('[data-check]').addEventListener('click', e=> e.stopPropagation());
+    tab.querySelector('[data-check]').addEventListener('change', e=>{
+      exportChecks[i] = e.target.checked;
+    });
+    tab.querySelector('[data-sdup]').addEventListener('click', e=>{
+      e.stopPropagation();
+      duplicateSheetAt(parseInt(e.currentTarget.dataset.sdup));
+    });
+    tab.querySelector('[data-sdel]').addEventListener('click', e=>{
+      e.stopPropagation();
+      deleteSheetAt(parseInt(e.currentTarget.dataset.sdel));
+    });
+    box.appendChild(tab);
+  });
+}
+
+document.getElementById('exportSelectAllBtn').addEventListener('click', ()=>{
+  exportChecks = sheets.map(()=>true);
+  renderSheetTabs();
+});
+document.getElementById('exportSelectNoneBtn').addEventListener('click', ()=>{
+  exportChecks = sheets.map(()=>false);
+  renderSheetTabs();
+});
+
+function getSelectedSheetIndices(){
+  const idxs = [];
+  sheets.forEach((sh, i)=>{ if(exportChecks[i]) idxs.push(i); });
+  return idxs;
+}
+
+/* Para exportaciones que combinan varias fichas: los personajes van primero,
+   seguidos de las unidades; dentro de cada grupo se respeta el orden original. */
+function normalizeAllStatProfiles(){
+  sheets.forEach(s=>{
+    (s.statProfiles||[]).forEach(p=>{
+      if(!Array.isArray(p.vals)) p.vals = [];
+      while(p.vals.length < statHeaders.length) p.vals.push('');
+      if(p.vals.length > statHeaders.length) p.vals.length = statHeaders.length;
+    });
+  });
+}
+
+function getSelectedSheetIndicesSorted(){
+  return getSelectedSheetIndices().slice().sort((a,b)=>{
+    const ta = sheets[a].sheetType === 'personaje' ? 0 : 1;
+    const tb = sheets[b].sheetType === 'personaje' ? 0 : 1;
+    if(ta !== tb) return ta - tb;
+    return a - b;
+  });
+}
+
+function switchToSheet(index){
+  if(index === currentSheetIndex) return;
+  syncCurrentSheet();
+  currentSheetIndex = index;
+  applyState(sheets[currentSheetIndex]);
+  renderSheetTabs();
+}
+
+document.getElementById('addSheetBtn').addEventListener('click', ()=>{
+  syncCurrentSheet();
+  sheets.push(makeBlankState(sheetType));
+  currentSheetIndex = sheets.length - 1;
+  applyState(sheets[currentSheetIndex]);
+  renderSheetTabs();
+});
+
+document.getElementById('clearCurrentSheetBtn').addEventListener('click', ()=>{
+  if(sheets.length === 0) return;
+  const name = sheets[currentSheetIndex] ? (sheets[currentSheetIndex].title || 'Sin título') : 'esta ficha';
+  if(!confirm(`¿Vaciar el contenido de "${name}"? Se perderán todos sus datos (perfiles, equipo, ilustración...). Esta acción no se puede deshacer.`)) return;
+  sheets[currentSheetIndex] = makeBlankState(sheetType);
+  applyState(sheets[currentSheetIndex]);
+  renderSheetTabs();
+});
+
+document.getElementById('deleteAllSheetsBtn').addEventListener('click', ()=>{
+  if(!confirm('¿Borrar TODAS las fichas? Se perderá todo el trabajo de este archivo. Esta acción no se puede deshacer.')) return;
+  sheets = [makeBlankState('unidad')];
+  exportChecks = [true];
+  currentSheetIndex = 0;
+  applyState(sheets[currentSheetIndex]);
+  renderSheetTabs();
+});
+
+function duplicateSheetAt(index){
+  syncCurrentSheet();
+  const copy = JSON.parse(JSON.stringify(sheets[index]));
+  copy.title = (copy.title || 'Ficha') + ' (copia)';
+  sheets.splice(index + 1, 0, copy);
+  exportChecks.splice(index + 1, 0, exportChecks[index] !== undefined ? exportChecks[index] : true);
+  currentSheetIndex = index + 1;
+  applyState(sheets[currentSheetIndex]);
+  renderSheetTabs();
+}
+
+function deleteSheetAt(index){
+  sheets.splice(index, 1);
+  exportChecks.splice(index, 1);
+  if(sheets.length === 0){
+    sheets.push(makeBlankState());
+    exportChecks.push(true);
+  }
+  if(currentSheetIndex >= sheets.length){
+    currentSheetIndex = sheets.length - 1;
+  }else if(index < currentSheetIndex){
+    currentSheetIndex -= 1;
+  }else if(index === currentSheetIndex){
+    currentSheetIndex = Math.min(currentSheetIndex, sheets.length - 1);
+  }
+  applyState(sheets[currentSheetIndex]);
+  renderSheetTabs();
+}
+
+/* ---------- save / load json ---------- */
+async function saveJsonWithPicker(dataObj, suggestedName){
+  const jsonStr = JSON.stringify(dataObj, null, 2);
+  if(window.showSaveFilePicker){
+    try{
+      const handle = await window.showSaveFilePicker({
+        suggestedName: suggestedName,
+        types: [{description:'Ficha JSON', accept:{'application/json':['.json']}}]
+      });
+      const writable = await handle.createWritable();
+      await writable.write(jsonStr);
+      await writable.close();
+      return;
+    }catch(err){
+      if(err && err.name === 'AbortError') return;
+      /* fall through to normal download */
+    }
+  }
+  const blob = new Blob([jsonStr], {type:'application/json'});
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = suggestedName;
+  link.click();
+}
+
+document.getElementById('btnSaveJson').addEventListener('click', ()=>{
+  syncCurrentSheet();
+  const data = { sheets: JSON.parse(JSON.stringify(sheets)), activeIndex: currentSheetIndex, armyLogoData };
+  saveJsonWithPicker(data, 'coleccion_fichas.json');
+});
+document.getElementById('loadJsonFile').addEventListener('change', function(){
+  const f = this.files[0];
+  if(!f) return;
+  const reader = new FileReader();
+  reader.onload = e=>{
+    try{
+      const data = JSON.parse(e.target.result);
+      if(Array.isArray(data.sheets) && data.sheets.length){
+        sheets = data.sheets;
+        currentSheetIndex = Math.min(Math.max(data.activeIndex || 0, 0), sheets.length - 1);
+      }else{
+        /* older single-sheet export */
+        sheets = [data];
+        currentSheetIndex = 0;
+      }
+      armyLogoData = data.armyLogoData || null;
+      applyState(sheets[currentSheetIndex]);
+      renderSheetTabs();
+    }catch(err){
+      alert('No se ha podido leer ese archivo. Comprueba que sea un .json exportado desde aquí.');
+    }
+  };
+  reader.readAsText(f);
+  this.value = '';
+});
+
+/* ---------- image export ---------- */
+function waitForImages(container){
+  const imgs = Array.from(container.querySelectorAll('img'));
+  return Promise.all(imgs.map(img=>{
+    if(img.complete && img.naturalWidth > 0) return Promise.resolve();
+    return new Promise(res=>{
+      img.addEventListener('load', res, {once:true});
+      img.addEventListener('error', res, {once:true});
+    });
+  }));
+}
+
+/* ---------- word export ---------- */
+function buildStatsTableWordHtml(profs){
+  const cellFont = "font-family:'PT Serif',Georgia,serif;font-size:10.5pt;";
+  const thStyleNum = `border:1px solid #1c1a16;padding:3px 2px;background:#e6e2d4;font-weight:bold;text-align:center;${cellFont}width:26px;`;
+  const thStyleName = `border:1px solid #1c1a16;padding:3px 7px;background:#e6e2d4;font-weight:bold;text-align:left;${cellFont}`;
+  const tdStyleNum = `border:1px solid #1c1a16;padding:3px 2px;text-align:center;${cellFont}width:26px;`;
+  let head = `<tr><th style="${thStyleName}"></th>` + statHeaders.map(h=>`<th style="${thStyleNum}">${h}</th>`).join('') + '</tr>';
+  let rows = profs.map(p=>{
+    return `<tr><td style="border:1px solid #1c1a16;padding:3px 7px;font-weight:bold;${cellFont}">${escHtml(p.name)}</td>` +
+      p.vals.map(v=>`<td style="${tdStyleNum}">${escHtml(v)}</td>`).join('') + '</tr>';
+  }).join('');
+  return `<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;width:100%;table-layout:fixed;margin-bottom:12px;">${head}${rows}</table>`;
+}
+
+function buildUnitWordHtml(s, grayscaleMode, logoDataForExport){
+  const rulesRaw = formatRulesText(s.rules);
+  const optItemsHtml = (s.options||[]).filter(o=>o.trim()).map(o=>`<li style="margin-bottom:2px;">${escHtml(o)}</li>`).join('');
+  const cmdText = grupoMandoText(s.cmdMusico, s.cmdPortaestandarte, s.cmdCampeonNombre, s.cmdCampeonPts);
+  const isPersonaje = s.sheetType === 'personaje';
+  const monturaListItems = isPersonaje ? monturaItems(s.monturas) : [];
+  const sizeFieldHtml = isPersonaje
+    ? ''
+    : `<div style="font-family:'PT Serif',Georgia,serif;font-size:11pt;color:#1c1a16;margin:0 0 8px;"><b>Tamaño de la unidad:</b> ${escHtml(s.size||'')}</div>`;
+  const monturaFieldHtml = monturaListItems.length
+    ? `<div style="font-family:'PT Serif',Georgia,serif;font-size:11pt;color:#1c1a16;font-weight:bold;margin:0 0 4px;">Montura:</div><ul style="font-family:'PT Serif',Georgia,serif;font-size:11pt;color:#1c1a16;margin:0 0 8px;padding-left:18px;">${monturaListItems.map(m=>`<li style="margin-bottom:2px;">${escHtml(m)}</li>`).join('')}</ul>`
+    : '';
+
+  const preset = PRESETS[s.preset] || PRESETS[currentPreset] || PRESETS.bretonia;
+  const barBg = grayscaleMode ? '#d6d6d6' : preset.bar;
+  const barBorder = grayscaleMode ? '#888888' : preset.barBorder;
+
+  const bodyFont = "font-family:'PT Serif',Georgia,serif;font-size:11pt;color:#1c1a16;";
+  const logoImg = logoDataForExport ? `<img src="${logoDataForExport}" width="46" height="46" style="display:block;">` : '';
+  const frameBorder = showFrame ? 'border:2px solid #1c1a16;' : 'border:2px solid transparent;';
+
+  /* Word no soporta bien la posición libre (X/Y) que se puede elegir en la
+     vista previa, así que aquí usamos una tabla de dos columnas de verdad
+     (texto a la izquierda, imagen a la derecha arriba), que es la forma
+     fiable de conseguir ese resultado en un documento Word. */
+  const illuColW = 220;
+  const gapW = 18;
+  const textColW = CONTENT_W - illuColW - gapW;
+  const illuImg = s.illuData ? `<img src="${s.illuData}" width="${illuColW}" style="display:block;">` : '';
+
+  return `
+  <table cellpadding="0" cellspacing="0" border="0" style="width:${CONTENT_W + 52}px;${frameBorder}border-collapse:collapse;background:#ffffff;margin-bottom:24px;">
+    <tr>
+      <td colspan="2" style="border:none;padding:16px 26px 8px 26px;">
+        <div style="font-family:Georgia,'Times New Roman',serif;font-size:22pt;font-weight:bold;text-transform:uppercase;letter-spacing:1px;color:#1c1a16;">${escHtml(s.title||'')}</div>
+      </td>
+    </tr>
+    <tr>
+      <td colspan="2" style="border:none;padding:0 26px 14px 26px;">
+        <table cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;">
+          <tr>
+            <td style="background:${barBg};border-top:1px solid ${barBorder};border-bottom:1px solid ${barBorder};width:50px;padding:3px 8px;">${logoImg}</td>
+            <td style="background:${barBg};border-top:1px solid ${barBorder};border-bottom:1px solid ${barBorder};padding:3px 8px;font-weight:bold;font-size:10.5pt;font-family:'PT Serif',Georgia,serif;color:#1c1a16;">${escHtml(s.uname||'')}</td>
+            <td style="background:${barBg};border-top:1px solid ${barBorder};border-bottom:1px solid ${barBorder};padding:3px 8px;text-align:right;white-space:nowrap;font-size:9.5pt;font-family:'PT Serif',Georgia,serif;color:#1c1a16;">puntos por miniatura: ${escHtml(s.pts||'')}</td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+    <tr>
+      <td style="border:none;vertical-align:top;width:${textColW}px;padding:0 0 20px 26px;">
+        <div style="${bodyFont}">
+          ${buildStatsTableWordHtml(s.statProfiles||[])}
+          ${sizeFieldHtml}
+          <div style="${bodyFont}margin:0 0 8px;"><b>Equipo:</b> ${escHtml(s.equipo||'')}</div>
+          ${monturaFieldHtml}
+          ${optItemsHtml ? `<div style="${bodyFont}font-weight:bold;margin:0 0 4px;">Opciones:</div><ul style="${bodyFont}margin:0 0 8px;padding-left:18px;">${optItemsHtml}</ul>` : ''}
+          ${cmdText ? `<div style="${bodyFont}margin:0 0 8px;"><b>Grupo de mando:</b> ${escHtml(cmdText)}</div>` : ''}
+          <div style="${bodyFont}font-weight:bold;margin:0 0 2px;">Reglas especiales:</div>
+          <div style="${bodyFont}font-style:italic;">${escHtml(rulesRaw).replace(/\n/g,'<br>')}</div>
+        </div>
+      </td>
+      <td style="border:none;vertical-align:top;width:${illuColW}px;padding:0 26px 20px ${gapW}px;">
+        ${illuImg}
+      </td>
+    </tr>
+  </table>
+  `;
+}
+
+function wordDocWrapper(bodyHtml){
+  return `
+  <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+  <head><meta charset="utf-8">
+  <!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom></w:WordDocument></xml><![endif]-->
+  <style>
+    body{font-family:'PT Serif', Georgia, serif; color:#1c1a16; background:#fff;}
+    table{border-collapse:collapse;}
+    @page Section1{size:8.5in 11in;margin:0.35in 0.35in 0.35in 0.35in;}
+    div.Section1{page:Section1;}
+  </style></head>
+  <body><div class="Section1">${bodyHtml}</div></body></html>`;
+}
+
+function sanitizeFilename(name){
+  return (name || 'ficha').trim().replace(/\s+/g,'_').replace(/[\\/:*?"<>|]/g,'') || 'ficha';
+}
+
+document.getElementById('btnExportWord').addEventListener('click', async ()=>{
+  syncCurrentSheet();
+  normalizeAllStatProfiles();
+  const selected = getSelectedSheetIndicesSorted();
+  if(selected.length === 0){
+    alert('Marca al menos una ficha para exportar.');
+    return;
+  }
+  const btn = document.getElementById('btnExportWord');
+  const original = btn.textContent;
+  btn.textContent = 'Generando documento...';
+  btn.disabled = true;
+  try{
+    let logoForExport = armyLogoData;
+    if(grayscaleMode){
+      logoForExport = await grayscaleImageData(armyLogoData);
+    }
+    const parts = [];
+    for(let n=0; n<selected.length; n++){
+      const idx = selected[n];
+      let s = Object.assign({}, sheets[idx]);
+      if((s.illuBrightness||100) !== 100){
+        s.illuData = await adjustImageBrightness(s.illuData, s.illuBrightness || 100);
+      }
+      if(grayscaleMode){
+        s.illuData = await grayscaleImageData(s.illuData);
+      }
+      const unitHtml = buildUnitWordHtml(s, grayscaleMode, logoForExport);
+      parts.push(n === 0 ? unitHtml : `<br clear="all" style="mso-special-character:line-break;page-break-before:always;">${unitHtml}`);
+    }
+    const html = wordDocWrapper(parts.join(''));
+    const blob = new Blob(['\ufeff', html], {type:'application/msword'});
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'fichas_word' + (grayscaleMode ? '_bn' : '') + '.doc';
+    link.click();
+  }catch(err){
+    console.error(err);
+    alert('Hubo un problema generando el documento. Inténtalo de nuevo.');
+  }finally{
+    btn.textContent = original;
+    btn.disabled = false;
+  }
+});
+
+/* Captura una ficha concreta como canvas, mostrándola brevemente en la vista
+   (necesario porque el resto de fichas no están en el DOM). */
+async function captureSheetCanvas(idx){
+  currentSheetIndex = idx;
+  applyState(sheets[idx]);
+  const card = document.getElementById('card');
+
+  /* html2canvas no interpreta de forma fiable el filter:brightness() de CSS,
+     así que antes de capturar "horneamos" el brillo en los píxeles reales
+     de la imagen y quitamos el filtro para que no se aplique dos veces. */
+  if(illuData && illuBrightness !== 100){
+    const imgEl = document.querySelector('#outIllu img');
+    if(imgEl){
+      const baked = await adjustImageBrightness(illuData, illuBrightness);
+      await new Promise(resolve=>{
+        imgEl.onload = resolve;
+        imgEl.onerror = resolve;
+        imgEl.src = baked;
+      });
+      imgEl.style.filter = 'none';
+    }
+  }
+
+  await waitForImages(card);
+  const canvas = await html2canvas(card, {
+    backgroundColor:'#ffffff', scale:2, useCORS:true, allowTaint:true, imageTimeout:0
+  });
+  if(grayscaleMode){
+    const ctx = canvas.getContext('2d');
+    const id = ctx.getImageData(0,0,canvas.width,canvas.height);
+    const d = id.data;
+    for(let i=0;i<d.length;i+=4){
+      const gray = 0.299*d[i] + 0.587*d[i+1] + 0.114*d[i+2];
+      d[i]=d[i+1]=d[i+2]=gray;
+    }
+    ctx.putImageData(id,0,0);
+  }
+  return canvas;
+}
+
+document.getElementById('btnExportPng').addEventListener('click', async ()=>{
+  syncCurrentSheet();
+  normalizeAllStatProfiles();
+  const selected = getSelectedSheetIndicesSorted();
+  if(selected.length === 0){
+    alert('Marca al menos una ficha para exportar.');
+    return;
+  }
+  const btn = document.getElementById('btnExportPng');
+  const original = btn.textContent;
+  btn.disabled = true;
+  const originalIndex = currentSheetIndex;
+  try{
+    const files = [];
+    const usedNames = {};
+    for(let n=0; n<selected.length; n++){
+      const idx = selected[n];
+      btn.textContent = `Generando PNG ${n+1}/${selected.length}...`;
+      const canvas = await captureSheetCanvas(idx);
+      const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
+      let name = sanitizeFilename(sheets[idx].title);
+      if(usedNames[name] != null){ usedNames[name]++; name = name + '_' + usedNames[name]; } else { usedNames[name] = 0; }
+      files.push({ name: name + (grayscaleMode ? '_bn' : '') + '.png', blob });
+    }
+    if(files.length === 1){
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(files[0].blob);
+      link.download = files[0].name;
+      link.click();
+    }else{
+      const zip = new JSZip();
+      files.forEach(f => zip.file(f.name, f.blob));
+      const zipBlob = await zip.generateAsync({type:'blob'});
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(zipBlob);
+      link.download = 'fichas_png' + (grayscaleMode ? '_bn' : '') + '.zip';
+      link.click();
+    }
+  }catch(err){
+    console.error(err);
+    alert('Hubo un problema generando las imágenes. Inténtalo de nuevo.');
+  }finally{
+    currentSheetIndex = originalIndex;
+    applyState(sheets[originalIndex]);
+    renderSheetTabs();
+    btn.textContent = original;
+    btn.disabled = false;
+  }
+});
+
+document.getElementById('btnExportWordImages').addEventListener('click', async ()=>{
+  syncCurrentSheet();
+  normalizeAllStatProfiles();
+  const selected = getSelectedSheetIndicesSorted();
+  if(selected.length === 0){
+    alert('Marca al menos una ficha para exportar.');
+    return;
+  }
+  const btn = document.getElementById('btnExportWordImages');
+  const original = btn.textContent;
+  btn.disabled = true;
+  const originalIndex = currentSheetIndex;
+  try{
+    const parts = [];
+    for(let n=0; n<selected.length; n++){
+      const idx = selected[n];
+      btn.textContent = `Generando ${n+1}/${selected.length}...`;
+      const canvas = await captureSheetCanvas(idx);
+      const imgData = canvas.toDataURL('image/jpeg', 0.92);
+      const naturalW = canvas.width / 2;
+      const naturalH = canvas.height / 2;
+      const maxW = 700; /* algo por debajo del ancho útil de página con los márgenes reducidos */
+      const scale = Math.min(1, maxW / naturalW);
+      const dispW = Math.round(naturalW * scale);
+      const dispH = Math.round(naturalH * scale);
+      parts.push(`<div style="width:${dispW}px;margin:0 auto 20px auto;text-align:center;"><img src="${imgData}" width="${dispW}" height="${dispH}" style="display:block;margin:0 auto;"></div>`);
+    }
+    const html = wordDocWrapper(`<div style="text-align:center;">${parts.join('')}</div>`);
+    const blob = new Blob(['\ufeff', html], {type:'application/msword'});
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'fichas_imagenes' + (grayscaleMode ? '_bn' : '') + '.doc';
+    link.click();
+  }catch(err){
+    console.error(err);
+    alert('Hubo un problema generando el documento. Inténtalo de nuevo.');
+  }finally{
+    currentSheetIndex = originalIndex;
+    applyState(sheets[originalIndex]);
+    renderSheetTabs();
+    btn.textContent = original;
+    btn.disabled = false;
+  }
+});
+
+document.getElementById('btnDocSummary').addEventListener('click', async ()=>{
+  syncCurrentSheet();
+  normalizeAllStatProfiles();
+  if(sheets.length === 0){
+    alert('No hay ninguna ficha creada todavía.');
+    return;
+  }
+  const btn = document.getElementById('btnDocSummary');
+  const original = btn.textContent;
+  btn.textContent = 'Generando resumen...';
+  btn.disabled = true;
+  try{
+    const headFont = "font-family:Georgia,'Times New Roman',serif;letter-spacing:.03em;";
+    const bodyFontFam = "font-family:'PT Serif',Georgia,serif;";
+    const thStyle = `border:1px solid #1c1a16;padding:2px 3px;background:#e6e2d4;font-weight:bold;text-align:center;${headFont}font-size:8pt;`;
+    const nameColWidth = 92;
+    const statColWidth = 24;
+
+    /* Página 1: todos los atributos de todos los perfiles, en una única tabla
+       compacta y sin títulos de unidad (para que quepa el máximo posible).
+       El primer perfil de cada ficha sale un poco más grande que los
+       siguientes, para poder distinguir dónde empieza cada unidad sin
+       necesidad de un título aparte. */
+    const colgroup = `<colgroup><col style="width:${nameColWidth}px;">` +
+      statHeaders.map(()=>`<col style="width:${statColWidth}px;">`).join('') + `</colgroup>`;
+    let rows = '';
+    sheets.forEach(s=>{
+      (s.statProfiles||[]).forEach((p, pi)=>{
+        const isFirst = pi === 0;
+        const size = isFirst ? '8pt' : '7.2pt';
+        const topBorder = isFirst ? 'border-top:1.5px solid #1c1a16;' : '';
+        const tdStyle = `border:1px solid #1c1a16;${topBorder}padding:${isFirst?'2.5px 3px':'1.5px 3px'};${bodyFontFam}font-size:${size};`;
+        rows += `<tr><td style="${tdStyle}font-weight:bold;">${escHtml(p.name)}</td>` +
+          p.vals.map(v=>`<td style="${tdStyle}text-align:center;">${escHtml(v)}</td>`).join('') + '</tr>';
+      });
+    });
+    const head = `<tr><th style="${thStyle}text-align:left;">Perfil</th>` + statHeaders.map(h=>`<th style="${thStyle}">${h}</th>`).join('') + '</tr>';
+    const attributesTable = `<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;width:${nameColWidth + statColWidth*statHeaders.length}px;table-layout:fixed;">${colgroup}${head}${rows}</table>`;
+    const attributesTitle = `<div style="${headFont}font-size:16pt;font-weight:bold;text-transform:uppercase;letter-spacing:1px;color:#1c1a16;margin-bottom:8px;">Resumen de atributos</div>`;
+
+    /* Página 2: reglas especiales, en una tabla de dos columnas (ficha / reglas). */
+    const ruleRows = sheets.map(s=>{
+      const rulesRaw = formatRulesText(s.rules);
+      if(!rulesRaw) return '';
+      return `<tr>` +
+        `<td style="border:1px solid #1c1a16;padding:4px 6px;${bodyFontFam}font-size:9pt;font-weight:bold;vertical-align:top;width:150px;">${escHtml(s.title||'Sin título')}</td>` +
+        `<td style="border:1px solid #1c1a16;padding:4px 6px;${bodyFontFam}font-size:9pt;font-style:italic;vertical-align:top;">${escHtml(rulesRaw).replace(/\n/g,'<br>')}</td>` +
+        `</tr>`;
+    }).filter(Boolean).join('');
+    const rulesTitle = `<div style="${headFont}font-size:16pt;font-weight:bold;text-transform:uppercase;letter-spacing:1px;color:#1c1a16;margin-bottom:8px;">Reglas especiales</div>`;
+    const rulesHead = `<tr><th style="${thStyle}text-align:left;width:150px;">Ficha</th><th style="${thStyle}text-align:left;">Reglas especiales</th></tr>`;
+    const rulesTable = ruleRows
+      ? `<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;width:100%;table-layout:fixed;">${rulesHead}${ruleRows}</table>`
+      : `<div style="${bodyFontFam}font-size:9pt;">(Ninguna ficha tiene reglas especiales.)</div>`;
+
+    const pageBreak = '<br clear="all" style="mso-special-character:line-break;page-break-before:always;">';
+    const html = wordDocWrapper(attributesTitle + attributesTable + pageBreak + rulesTitle + rulesTable);
+    const blob = new Blob(['\ufeff', html], {type:'application/msword'});
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'resumen_perfiles.doc';
+    link.click();
+  }finally{
+    btn.textContent = original;
+    btn.disabled = false;
+  }
+});
+
+/* ---------- sheet type switch (unidad / personaje) ---------- */
+function syncTypeSwitchUI(){
+  document.querySelectorAll('.type-btn').forEach(b=>{
+    b.classList.toggle('active', b.dataset.type === sheetType);
+  });
+}
+
+document.querySelectorAll('.type-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    sheetType = btn.dataset.type;
+    syncTypeSwitchUI();
+    update();
+  });
+});
+
+/* ---------- resizable panel ---------- */
+(function(){
+  const panel = document.getElementById('panel');
+  const handle = document.getElementById('resizeHandle');
+  let resizing = false;
+  handle.addEventListener('mousedown', ()=>{
+    resizing = true;
+    handle.classList.add('active');
+    document.body.style.userSelect = 'none';
+  });
+  window.addEventListener('mousemove', e=>{
+    if(!resizing) return;
+    const w = Math.min(900, Math.max(300, e.clientX));
+    panel.style.width = w + 'px';
+  });
+  window.addEventListener('mouseup', ()=>{
+    resizing = false;
+    handle.classList.remove('active');
+    document.body.style.userSelect = '';
+  });
+})();
+
+applyPreset('bretonia');
+renderStatRows();
+renderOptRows();
+renderMonturaRows();
+applyCardMaxHeight();
+update();
+sheets = [collectState()];
+currentSheetIndex = 0;
+renderSheetTabs();
+</script>
+</body>
+</html>
