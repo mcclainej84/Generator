@@ -1,137 +1,10 @@
 <!DOCTYPE html>
 <!--
-  CODEXMAKER — Generador de fichas de unidad (Warhammer)
-  Versión: 2.12
+  CODEXMAKER — Generador de fichas de unidad y personaje (Warhammer)
+  Versión: 3.1
 
-  CHANGELOG
-  v2.12 - Panel lateral izquierdo un 30% más ancho por defecto (400px ->
-          520px). Sigue siendo redimensionable arrastrando el borde,
-          igual que antes.
-  v2.11 - Arreglado un fallo por el que los valores de los perfiles se
-          salían del recuadro (las casillas no se encogían a su columna
-          de la rejilla); aplicado también a Opciones y Montura por si
-          acaso. Reglas especiales admite ahora saltos de línea: dentro de
-          cada línea las reglas separadas por comas se siguen juntando
-          igual, pero puedes pulsar Intro para maquetar el texto en varias
-          líneas (por ejemplo, alrededor de la ilustración). Se respeta en
-          la vista previa, el PNG, el Word con texto, el Word con imágenes
-          y el resumen.
-  v2.10 - Revertido el atributo "TS" añadido en la v2.8 (perfiles vuelven a
-          ser M, HA, HP, F, R, H, I, A, L). Afecta al panel, la vista
-          previa, el Word individual, el PNG y el resumen. Se ha añadido
-          además una limpieza automática por si alguna ficha se llegó a
-          guardar con el TS durante ese tiempo, para que no queden
-          columnas descuadradas. Puede que se retome en el futuro.
-  v2.9 - Arreglado un fallo que a veces desplazaba la posición de la
-         ilustración al cargar una ficha o cambiar entre fichas: se debía
-         a que se intentaba encajar la imagen en los márgenes antes de
-         conocer su tamaño real (se asumía cuadrada por error), lo que
-         podía mover y guardar una posición equivocada. Ahora solo se
-         ajusta una vez se conocen las medidas reales.
-         El programa empieza vacío al abrirlo (como al pulsar "+ Nueva
-         ficha"), en vez de traer una ficha de ejemplo ya rellena.
-  v2.8 - "Word con texto" ahora genera siempre un único documento con todas
-         las fichas marcadas (antes exportaba una por archivo). Resumen de
-         perfiles: columnas de atributos con el mismo ancho (usando
-         colgroup), tipografía algo más cuidada y compacta, el primer
-         perfil de cada ficha sale ligeramente más grande que los
-         siguientes para distinguir dónde empieza cada unidad sin usar
-         títulos, y las reglas especiales pasan a ser una tabla de dos
-         columnas (Ficha / Reglas). Nuevo atributo "TS" al final de cada
-         perfil de características (de momento vacío por defecto).
-  v2.7 - Nuevo botón "Quitar imagen" en Ilustración. Arreglado el brillo en
-         la exportación a PNG (y Word con imágenes): ahora se hornea en los
-         píxeles antes de capturar, en vez de depender de que html2canvas
-         interprete el filtro CSS (no lo hacía de forma fiable). Rehecho el
-         "Word con texto": vuelve a ser una tabla de dos columnas de verdad
-         (texto a la izquierda, imagen arriba a la derecha) en vez de
-         posición libre, que Word no soportaba bien y hacía que la imagen
-         cayera al final; de paso, las columnas de atributos tienen ahora
-         el mismo ancho. Rehecho el resumen de perfiles: página 1 con todos
-         los atributos en una tabla compacta sin títulos de unidad, página 2
-         con las reglas especiales (una línea por ficha).
-  v2.6 - Todas las secciones del panel se pueden plegar/desplegar ahora
-         (antes solo Vista y Escudo del ejército). Solo esas dos siguen
-         empezando cerradas por defecto; el resto empiezan abiertas.
-  v2.5 - El programa pasa a llamarse CodexMaker (título de la pestaña y
-         cabecera del panel). Cuando no hay ilustración subida, el hueco se
-         queda en blanco (sin texto ni borde de aviso).
-  v2.4 - Las secciones "Vista" y "Escudo del ejército" ahora se pueden
-         plegar/desplegar (empiezan plegadas, ya que se usan poco). Nuevos
-         botones en "Tus fichas": "Vaciar ficha actual" (borra el contenido
-         de la ficha abierta sin quitarla de la lista) y "Borrar todas las
-         fichas" (deja el archivo como si fuera nuevo). Ambos piden
-         confirmación antes de actuar, ya que no se pueden deshacer.
-  v2.3 - El "Alto máximo de la ficha" ahora es un ajuste propio de cada
-         ficha (antes era global para todo el archivo), con un rango más
-         estrecho de 450 a 800 px. Como es un máximo, no un tamaño fijo,
-         las fichas con poco texto quedan más pequeñas solas, mientras que
-         las que llenan ese espacio se quedan en el tamaño estándar (800).
-  v2.2 - "Quitar marco" pasa a ser el ajuste por defecto. Montura se muestra
-         ahora como lista con viñetas (una por línea), igual que Opciones,
-         y sigue sin aparecer nada si no hay ninguna montura. Nuevo control
-         "Alto máximo de la ficha" en Vista: si el contenido no cabe, se
-         recorta por abajo (nunca por arriba); pensado para que quepan
-         varias fichas en la misma página al exportar a Word con imágenes
-         o PNG.
-  v2.1 - Hoja de personaje: Montura pasa a ir debajo de Equipo, y solo se
-         muestra si tiene algo (antes de meter una montura ya salía vacía).
-         Word con imágenes: las imágenes salen centradas, con menos margen
-         de página, y ya no se fuerza una página por ficha, así que si dos
-         caben en la misma hoja, Word las coloca juntas automáticamente.
-         Los tres botones de exportar caben ahora en una sola línea (con
-         texto más corto). Recuperado el reordenar fichas arrastrando en
-         "Tus fichas" (icono ⠿).
-  v2.0 - Nuevo interruptor "Quitar/Añadir marco" en Vista: controla si la
-         ficha lleva el borde exterior, tanto en la vista previa como en
-         todas las exportaciones (PNG, Word con texto, Word con imágenes).
-         Ajustado el espaciado entre fichas en "Tus fichas" para que se vea
-         más compacto, como antes.
-  v1.9 - Nuevas opciones de exportación: PNG (imágenes sueltas), Word con
-         texto (como antes) y Word con imágenes (todas las fichas marcadas
-         pegadas como imágenes dentro de un único documento, una tras otra).
-         Se ha quitado la exportación a PDF. Al combinar varias fichas, los
-         personajes van siempre primero y las unidades después.
-         Añadidas de verdad las hojas de personaje (antes solo un aviso de
-         "próximamente"): son iguales a las de unidad salvo que no llevan
-         "Tamaño de la unidad" y en su lugar tienen una lista de "Montura"
-         (nombre + puntos, se pueden añadir varias). El interruptor de
-         arriba cambia el tipo de la ficha actual; "+ Nueva ficha" crea una
-         ficha del tipo que esté seleccionado en ese momento.
-  v1.8 - "Exportar fichas" ya no es una sección aparte: la casilla de
-         selección para exportar vive ahora en cada fila de "Tus fichas",
-         junto con marcar/desmarcar todas y los botones de Word/PDF.
-  v1.7 - Reordenado el panel: Guardar/cargar, Vista, Escudo del ejército,
-         Tus fichas y Exportar fichas ahora van arriba del todo, en ese
-         orden, seguidos del resto de secciones como antes. Eliminado el
-         botón "Descargar como imagen (PNG)" (ya no es necesario).
-  v1.6 - Nuevo control de brillo para la ilustración (más clara o más
-         oscura), aplicado en la vista previa, el PNG, el PDF y el Word.
-  v1.5 - Nueva exportación con lista de comprobación: eliges qué fichas
-         exportar (marcar/desmarcar todas), y a qué formato, Word o PDF.
-         Si marcas varias, se descargan juntas en un .zip (un archivo por
-         ficha); si solo marcas una, se descarga directamente. Sustituye a
-         los antiguos botones de "una ficha" / "todas las fichas".
-  v1.4 - Arreglo: la generación de imágenes con IA usaba un endpoint que
-         requiere autenticación y fallaba siempre; ahora usa el endpoint
-         clásico y realmente gratuito de Pollinations.ai, y muestra las
-         imágenes que sí se generen aunque alguna falle.
-  v1.3 - Nueva opción para generar imágenes de referencia con IA a partir del
-         nombre de la unidad (fondo blanco, 3 variantes), usando el servicio
-         externo gratuito Pollinations.ai (sin clave API). Experimental.
-  v1.2 - El título y la barra gris siempre quedan por delante de la ilustración,
-         aunque la subas por encima del borde del texto (antes se veía la
-         imagen tapando esa zona).
-  v1.1 - La ilustración se puede subir un poco por encima del borde superior
-         del texto (hasta 40px), y empieza colocada así por defecto.
-  v1.0 - Primera versión "estable": fichas múltiples por archivo, perfiles de
-         características, grupo de mando, opciones, reglas especiales, escudo
-         de ejército único, ilustración de tamaño y posición libres (nunca se
-         recorta, se puede colocar delante o detrás del texto), vista y
-         exportación en blanco y negro, exportación a PNG y a Word (ficha
-         suelta, documento con todas las fichas en páginas separadas, y
-         resumen de perfiles), guardar/cargar todo el archivo en .json con
-         imágenes comprimidas automáticamente, panel redimensionable.
+  El historial completo de cambios (changelog) ya no vive aquí: está en el
+  archivo CHANGELOG.md que se entrega junto a este .html. Consúltalo ahí.
 
   Para versionar de verdad (y poder volver atrás con garantías), usa Git:
   haz un commit cada vez que subas una versión nueva a tu repositorio, y
@@ -220,18 +93,6 @@
     color:var(--muted);
     margin-bottom:14px;
   }
-  .type-switch{display:flex;gap:6px;margin-bottom:16px;}
-  .type-btn{
-    flex:1;
-    font-family:'Trebuchet MS',sans-serif;
-    font-size:11.5px;
-    padding:8px 6px;
-    border:1px solid #cfc8b4;
-    background:#fff;
-    border-radius:5px;
-    cursor:pointer;
-  }
-  .type-btn.active{background:var(--accent);color:#fff;border-color:var(--accent);}
   fieldset{
     border:1px solid #ddd6c4;
     border-radius:6px;
@@ -327,18 +188,17 @@
   
   .stat-row{
     display:grid;
-    grid-template-columns:1.4fr repeat(9, 28px) 22px 22px;
+    grid-template-columns:22px 1.4fr repeat(9, 28px) 22px 22px;
     gap:3px;
     align-items:center;
     margin-bottom:4px;
-    cursor:grab;
   }
   .stat-row.dragging{opacity:.4;}
   .stat-row input{padding:3px 2px;font-size:10.5px;text-align:center;min-width:0;width:100%;}
   .stat-row input.name{text-align:left;padding:3px 5px;}
   .stat-head{
     display:grid;
-    grid-template-columns:1.4fr repeat(9, 28px) 22px 22px;
+    grid-template-columns:22px 1.4fr repeat(9, 28px) 22px 22px;
     gap:3px;
     font-family:'Trebuchet MS',sans-serif;
     font-size:9px;
@@ -406,14 +266,26 @@
   .opt-row, .rule-row{
     display:flex;gap:6px;margin-bottom:5px;
     align-items:center;
-    cursor:grab;
   }
   .opt-row.dragging{opacity:.4;}
   .opt-row input, .rule-row input{flex:1;min-width:0;}
   .montura-row{display:flex;gap:6px;margin-bottom:5px;align-items:center;}
   .montura-row input.montura-name{flex:2;min-width:0;}
   .montura-row input.montura-pts{flex:1;min-width:0;}
-  .drag-dot{font-family:monospace;color:#bbb;font-size:12px;padding:0 2px;user-select:none;}
+  .drag-dot{font-family:monospace;color:#bbb;font-size:12px;padding:0 2px;user-select:none;cursor:grab;flex-shrink:0;text-align:center;}
+  .drag-dot:active{cursor:grabbing;}
+  .ia-subhead{
+    font-family:'Trebuchet MS',sans-serif;
+    font-size:10.5px;
+    font-weight:bold;
+    text-transform:uppercase;
+    letter-spacing:.04em;
+    color:var(--accent);
+    margin:12px 0 4px;
+    padding-top:10px;
+    border-top:1px solid #eee2d0;
+  }
+  .ia-subhead:first-of-type{margin-top:2px;padding-top:0;border-top:none;}
 
   .sheet-tabs{display:flex;flex-direction:column;gap:2px;max-height:230px;overflow-y:auto;}
   .sheet-tab{
@@ -502,18 +374,6 @@
   }
   .file-row .btnlike:hover{border-color:var(--accent);}
   .file-row input[type=file]{display:none;}
-
-  .placeholder-box{
-    font-family:'Trebuchet MS',sans-serif;
-    font-size:12.5px;
-    color:var(--muted);
-    background:#f2efe6;
-    border:1px dashed #cfc8b4;
-    border-radius:8px;
-    padding:22px 18px;
-    text-align:center;
-    line-height:1.6;
-  }
 
   /* ---------- RIGHT: PREVIEW ---------- */
   .stage{
@@ -661,12 +521,10 @@
 <body>
 
 <div class="panel" id="panel">
-  <h1>CodexMaker <span style="opacity:.5;font-weight:normal;">· v2.12</span></h1>
+  <h1>CodexMaker <span style="opacity:.5;font-weight:normal;">· v3.1</span></h1>
   <div class="sub">Rellena los datos y la ficha se genera a la derecha.</div>
-
-  <div class="type-switch" id="typeSwitch">
-    <button type="button" class="type-btn active" data-type="unidad">📜 Hoja de unidad</button>
-    <button type="button" class="type-btn" data-type="personaje">🧙 Hoja de personaje</button>
+  <div id="fileStatusBar" style="display:none;font-family:'Trebuchet MS',sans-serif;font-size:10px;color:#999;margin:-6px 0 10px;">
+    📄 <span id="fileStatusName"></span> — <span id="fileStatusDirty"></span>
   </div>
 
   <div id="unitPanelContent">
@@ -694,15 +552,21 @@
 
   <details class="fieldset-collapse">
     <summary>Escudo del ejército</summary>
-    <label>Logo / escudo (opcional)</label>
+    <label>Logo / escudo por defecto (para todas las fichas)</label>
     <input type="file" id="logoFile" accept="image/*">
     <div class="hint">Este icono es único para todo el archivo y se aplica automáticamente a todas tus fichas, así que solo hace falta subirlo una vez.</div>
+
+    <label style="margin-top:12px;">Reemplazar solo en esta ficha (opcional)</label>
+    <input type="file" id="sheetLogoFile" accept="image/*">
+    <button class="tiny-btn" id="sheetLogoResetBtn" style="margin-top:6px;">Usar el del ejército en esta ficha</button>
+    <div class="hint" id="sheetLogoStatusHint" style="display:none;color:var(--accent);">Esta ficha tiene su propio escudo, distinto del general.</div>
   </details>
 
   <details class="fieldset-collapse" open>
     <summary>Tus fichas</summary>
     <div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap;">
-      <button class="tiny-btn" id="addSheetBtn" style="margin-top:0;">+ Nueva ficha</button>
+      <button class="tiny-btn" id="addSheetUnitBtn" style="margin-top:0;">📜 Nueva unidad</button>
+      <button class="tiny-btn" id="addSheetCharBtn" style="margin-top:0;">🧙 Nuevo personaje</button>
       <button class="tiny-btn" id="exportSelectAllBtn">Marcar todas</button>
       <button class="tiny-btn" id="exportSelectNoneBtn">Desmarcar todas</button>
     </div>
@@ -749,26 +613,41 @@
     <summary>Ilustración</summary>
     <label>Imagen de la miniatura / unidad</label>
     <input type="file" id="illuFile" accept="image/*">
+    <div class="hint" id="illuFileNameHint" style="display:none;">Archivo original: <span id="illuFileName"></span></div>
     <div class="hint">Tamaño recomendado: 600 × 800&nbsp;px (formato vertical, relación 3:4). La imagen nunca se recorta, siempre se ve entera. Se comprime automáticamente al subirla para que el archivo pese poco.</div>
     <label>Tamaño: <span id="illuZoomLabel">34%</span> del ancho de la ficha</label>
     <input type="range" id="illuZoomRange" min="10" max="90" step="2" value="34" style="width:100%;">
     <label style="margin-top:8px;">Brillo: <span id="illuBrightnessLabel">100%</span></label>
     <input type="range" id="illuBrightnessRange" min="40" max="180" step="5" value="100" style="width:100%;">
-    <button class="tiny-btn" id="illuResetBtn" style="margin-top:6px;">Restablecer encuadre</button>
-    <button class="tiny-btn" id="illuRemoveBtn" style="margin-top:6px;background:#7a1f1f;color:#fff;border-color:#7a1f1f;">🗑️ Quitar imagen</button>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;">
+      <button class="tiny-btn" id="illuFlipBtn" title="Voltear horizontalmente">↔️ Voltear</button>
+      <button class="tiny-btn" id="illuResetBtn">Restablecer encuadre</button>
+      <button class="tiny-btn" id="illuRemoveBtn" style="background:#7a1f1f;color:#fff;border-color:#7a1f1f;">🗑️ Quitar imagen</button>
+    </div>
     <div class="hint">Arrastra la imagen libremente por toda la ficha (incluso encima del texto) para colocarla donde quieras.</div>
 
-    <label style="margin-top:12px;">O genera imágenes de referencia con IA</label>
-    <input type="text" id="illuPromptInput" placeholder="Ej. alimaña skaven con daga, deja vacío para usar el nombre de la ficha">
-    <button class="small-btn" id="illuGenBtn" style="margin-top:6px;">🎲 Generar 3 variantes</button>
-    <div id="illuGenResults"></div>
-    <div class="hint">Usa un servicio externo gratuito (Pollinations.ai) para generar bocetos con fondo blanco a partir del texto. Es experimental: puede tardar unos segundos o fallar alguna vez. Haz clic en una imagen para usarla en esta ficha.</div>
+    <details class="fieldset-collapse" style="margin-top:12px;">
+      <summary>IA</summary>
+
+      <div class="ia-subhead">Generar con IA</div>
+      <label>Descripción para generar imágenes de referencia</label>
+      <input type="text" id="illuPromptInput" placeholder="Ej. alimaña skaven con daga, deja vacío para usar el nombre de la ficha">
+      <button class="small-btn" id="illuGenBtn" style="margin-top:6px;">🎲 Generar 3 variantes</button>
+      <div id="illuGenResults"></div>
+      <div class="hint">Usa un servicio externo gratuito (Pollinations.ai) para generar bocetos con fondo blanco a partir del texto. Es experimental: puede tardar unos segundos o fallar alguna vez. Haz clic en una imagen para usarla en esta ficha.</div>
+
+      <div class="ia-subhead">Editar con IA</div>
+      <label>Tolerancia: <span id="illuCleanupToleranceLabel">40</span></label>
+      <input type="range" id="illuCleanupToleranceRange" min="10" max="100" step="5" value="40" style="width:100%;">
+      <button class="small-btn" id="illuCleanupBtn" style="margin-top:6px;">🧹 Blanquear fondo</button>
+      <div class="hint">Detecta el color de las esquinas de la imagen y convierte a blanco los píxeles parecidos, con el margen de tolerancia que elijas. Funciona bien si la foto ya tiene un fondo bastante liso o claro. Aviso honesto: no es una segmentación real por IA (eso necesitaría un servicio de pago o un modelo pesado), así que con fondos complejos no dará buen resultado. Si no te convence, vuelve a subir la imagen original.</div>
+    </details>
   </details>
 
   <details class="fieldset-collapse" open>
     <summary>Perfiles de características</summary>
     <div class="stat-head">
-      <div>Perfil</div><div>M</div><div>HA</div><div>HP</div><div>F</div><div>R</div><div>H</div><div>I</div><div>A</div><div>L</div><div></div><div></div>
+      <div></div><div>Perfil</div><div>M</div><div>HA</div><div>HP</div><div>F</div><div>R</div><div>H</div><div>I</div><div>A</div><div>L</div><div></div><div></div>
     </div>
     <div id="statRows"></div>
     <button class="small-btn" id="addStat">+ Añadir perfil</button>
@@ -821,7 +700,7 @@
   </details>
 
   <div class="export-bar">
-    <button class="export-btn" id="btnDocSummary">📋 Generar resumen de perfiles de unidades</button>
+    <button class="export-btn" id="btnDocSummary">📋 Generar hoja de referencia</button>
   </div>
 
   </div>
@@ -877,6 +756,9 @@ let illuWidthPct = 34;
 let illuPosX = null;
 let illuPosY = null;
 let illuBrightness = 100;
+let illuFlipped = false; /* volteo horizontal, por ficha */
+let illuOriginalName = null; /* nombre del archivo original subido, solo informativo */
+let sheetLogoOverride = null; /* escudo propio de esta ficha (null = usar el del ejército) */
 const CONTENT_W = 708; /* ancho útil de la ficha: 760px de tarjeta menos 26px de margen a cada lado */
 const ILLU_DEFAULT_W_PCT = 34;
 let currentPreset = 'bretonia';
@@ -1015,16 +897,82 @@ function adjustImageBrightness(dataUrl, brightnessPct){
   });
 }
 
-/* ---------- stat profile rows rendering ---------- */
+/* Word ignora el transform:scaleX() de CSS, así que para esa exportación
+   horneamos el volteo horizontal directamente en los píxeles. */
+function flipImageHorizontal(dataUrl){
+  return new Promise(resolve=>{
+    if(!dataUrl){ resolve(dataUrl); return; }
+    const img = new Image();
+    img.onload = ()=>{
+      const c = document.createElement('canvas');
+      c.width = img.naturalWidth || 1;
+      c.height = img.naturalHeight || 1;
+      const ctx = c.getContext('2d');
+      ctx.translate(c.width, 0);
+      ctx.scale(-1, 1);
+      ctx.drawImage(img, 0, 0);
+      resolve(c.toDataURL('image/png'));
+    };
+    img.onerror = ()=> resolve(dataUrl);
+    img.src = dataUrl;
+  });
+}
+
+/* "Blanquear fondo": no es una segmentación real por IA (eso necesitaría un
+   servicio de pago o un modelo de aprendizaje pesado, entrenado además para
+   personas/retratos, no para miniaturas). Es un ajuste automático simple:
+   toma el color medio de las cuatro esquinas y convierte a blanco los
+   píxeles parecidos a ese color, dentro del margen de tolerancia elegido.
+   Funciona razonablemente si la foto ya tiene un fondo bastante liso o
+   claro; con fondos complejos no dará un buen resultado. */
+function cleanupBackground(dataUrl, tolerance){
+  return new Promise(resolve=>{
+    if(!dataUrl){ resolve(dataUrl); return; }
+    const img = new Image();
+    img.onload = ()=>{
+      const c = document.createElement('canvas');
+      const w = img.naturalWidth || 1, h = img.naturalHeight || 1;
+      c.width = w; c.height = h;
+      const ctx = c.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      try{
+        const id = ctx.getImageData(0, 0, w, h);
+        const d = id.data;
+        const sample = (x, y)=>{
+          const i = (y * w + x) * 4;
+          return [d[i], d[i+1], d[i+2]];
+        };
+        const corners = [sample(0,0), sample(w-1,0), sample(0,h-1), sample(w-1,h-1)];
+        const avg = corners.reduce((a,c)=>[a[0]+c[0],a[1]+c[1],a[2]+c[2]], [0,0,0]).map(v=>v/4);
+        const thresh = (tolerance || 40) * 2.55;
+        for(let i=0;i<d.length;i+=4){
+          const dr = d[i]-avg[0], dg = d[i+1]-avg[1], db = d[i+2]-avg[2];
+          const dist = Math.sqrt(dr*dr + dg*dg + db*db);
+          if(dist < thresh){
+            d[i] = 255; d[i+1] = 255; d[i+2] = 255;
+          }
+        }
+        ctx.putImageData(id, 0, 0);
+        resolve(c.toDataURL('image/png'));
+      }catch(err){
+        resolve(dataUrl);
+      }
+    };
+    img.onerror = ()=> resolve(dataUrl);
+    img.src = dataUrl;
+  });
+}
+
+
 function renderStatRows(){
   const box = document.getElementById('statRows');
   box.innerHTML = '';
   statProfiles.forEach((p, i)=>{
     const row = document.createElement('div');
     row.className = 'stat-row';
-    row.draggable = true;
     row.dataset.index = i;
-    row.innerHTML = `<input class="name" data-i="${i}" data-f="name" value="${escAttr(p.name)}">` +
+    row.innerHTML = `<span class="drag-dot" title="Arrastra para reordenar">⠿</span>` +
+      `<input class="name" data-i="${i}" data-f="name" value="${escAttr(p.name)}">` +
       p.vals.map((v,j)=>`<input data-i="${i}" data-j="${j}" value="${escAttr(v)}">`).join('') +
       `<button class="icon-btn" data-dup="${i}" title="Duplicar perfil">⧉</button>` +
       `<button class="del-btn" data-del="${i}" title="Eliminar perfil">🗑</button>`;
@@ -1053,7 +1001,7 @@ function renderStatRows(){
       renderStatRows(); update();
     });
   });
-  addDragHandlers(box, '.stat-row', statProfiles, ()=>{ renderStatRows(); update(); });
+  addDragHandlers(box, '.stat-row', statProfiles, ()=>{ renderStatRows(); update(); }, '.drag-dot');
 }
 
 document.getElementById('addStat').addEventListener('click', ()=>{
@@ -1069,9 +1017,8 @@ function renderOptRows(){
   options.forEach((o,i)=>{
     const row = document.createElement('div');
     row.className = 'opt-row';
-    row.draggable = true;
     row.dataset.index = i;
-    row.innerHTML = `<span class="drag-dot">⠿</span><input value="${escAttr(o)}" data-i="${i}"><button class="del-btn" data-delo="${i}" title="Eliminar opción">🗑</button>`;
+    row.innerHTML = `<span class="drag-dot" title="Arrastra para reordenar">⠿</span><input value="${escAttr(o)}" data-i="${i}"><button class="del-btn" data-delo="${i}" title="Eliminar opción">🗑</button>`;
     box.appendChild(row);
   });
   box.querySelectorAll('input[data-i]').forEach(inp=>{
@@ -1083,7 +1030,7 @@ function renderOptRows(){
       renderOptRows(); update();
     });
   });
-  addDragHandlers(box, '.opt-row', options, ()=>{ renderOptRows(); update(); });
+  addDragHandlers(box, '.opt-row', options, ()=>{ renderOptRows(); update(); }, '.drag-dot');
 }
 
 function renderMonturaRows(){
@@ -1112,15 +1059,18 @@ function renderMonturaRows(){
   });
 }
 
-function addDragHandlers(box, selector, arr, onDone){
+function addDragHandlers(box, selector, arr, onDone, handleSelector){
   let dragIndex = null;
   box.querySelectorAll(selector).forEach(row=>{
-    row.addEventListener('dragstart', e=>{
+    const handle = handleSelector ? row.querySelector(handleSelector) : row;
+    if(!handle) return;
+    handle.draggable = true;
+    handle.addEventListener('dragstart', e=>{
       dragIndex = parseInt(row.dataset.index);
       row.classList.add('dragging');
       e.dataTransfer.effectAllowed = 'move';
     });
-    row.addEventListener('dragend', ()=> row.classList.remove('dragging'));
+    handle.addEventListener('dragend', ()=> row.classList.remove('dragging'));
     row.addEventListener('dragover', e=> e.preventDefault());
     row.addEventListener('drop', e=>{
       e.preventDefault();
@@ -1223,12 +1173,17 @@ function update(){
   document.getElementById('statsTable').innerHTML = buildStatsTableInnerHtml(statProfiles);
 
   const logoBox = document.getElementById('outLogo');
-  logoBox.innerHTML = armyLogoData ? `<img src="${armyLogoData}">` : '';
+  const effectiveLogo = sheetLogoOverride || armyLogoData;
+  logoBox.innerHTML = effectiveLogo ? `<img src="${effectiveLogo}">` : '';
+  const sheetLogoHint = document.getElementById('sheetLogoStatusHint');
+  if(sheetLogoHint) sheetLogoHint.style.display = sheetLogoOverride ? '' : 'none';
 
   const illuLayer = document.querySelector('.illu-layer');
   const illuBox = document.getElementById('outIllu');
   if(illuData){
-    illuBox.innerHTML = `<img src="${illuData}" style="filter:brightness(${illuBrightness}%);">`;
+    const flipTransform = illuFlipped ? 'transform:scaleX(-1);' : '';
+    const titleAttr = illuOriginalName ? ` title="${escAttr(illuOriginalName)}"` : '';
+    illuBox.innerHTML = `<img src="${illuData}" style="filter:brightness(${illuBrightness}%);${flipTransform}"${titleAttr}>`;
     illuBox.classList.add('has-image');
     const w = illuWidthPx();
     illuBox.style.width = w + 'px';
@@ -1258,6 +1213,16 @@ function update(){
     illuBox.style.width = 'auto';
     illuBox.style.left = Math.max(0, CONTENT_W - 249) + 'px';
     illuBox.style.top = '0px';
+  }
+  const illuFileNameHint = document.getElementById('illuFileNameHint');
+  const illuFileNameSpan = document.getElementById('illuFileName');
+  if(illuFileNameHint && illuFileNameSpan){
+    if(illuData && illuOriginalName){
+      illuFileNameSpan.textContent = illuOriginalName;
+      illuFileNameHint.style.display = '';
+    }else{
+      illuFileNameHint.style.display = 'none';
+    }
   }
   syncIlluZoomUI();
 
@@ -1314,7 +1279,7 @@ async function handleImageUpload(input, maxWidth, maxHeight, mimeType, quality, 
   if(!f) return;
   try{
     const dataUrl = await compressImageFile(f, maxWidth, maxHeight, mimeType, quality);
-    onDone(dataUrl);
+    onDone(dataUrl, f.name);
   }catch(err){
     console.error(err);
     alert('No se ha podido procesar esa imagen. Inténtalo con otro archivo.');
@@ -1325,12 +1290,22 @@ document.getElementById('logoFile').addEventListener('change', function(){
   handleImageUpload(this, 200, 200, 'image/png', 1, data => { armyLogoData = data; update(); });
   this.value = '';
 });
+document.getElementById('sheetLogoFile').addEventListener('change', function(){
+  handleImageUpload(this, 200, 200, 'image/png', 1, data => { sheetLogoOverride = data; update(); });
+  this.value = '';
+});
+document.getElementById('sheetLogoResetBtn').addEventListener('click', ()=>{
+  sheetLogoOverride = null;
+  update();
+});
 document.getElementById('illuFile').addEventListener('change', function(){
-  handleImageUpload(this, 900, 1200, 'image/jpeg', 0.85, data => {
+  handleImageUpload(this, 900, 1200, 'image/jpeg', 0.85, (data, fileName) => {
     illuData = data;
     illuWidthPct = ILLU_DEFAULT_W_PCT;
     illuPosX = null; illuPosY = null; /* se recalcula la posición por defecto al renderizar */
     illuBrightness = 100;
+    illuFlipped = false;
+    illuOriginalName = fileName || null;
     update();
   });
   this.value = '';
@@ -1452,6 +1427,7 @@ document.getElementById('illuResetBtn').addEventListener('click', ()=>{
   illuWidthPct = ILLU_DEFAULT_W_PCT;
   illuPosX = null; illuPosY = null;
   illuBrightness = 100;
+  illuFlipped = false;
   update();
 });
 
@@ -1462,7 +1438,41 @@ document.getElementById('illuRemoveBtn').addEventListener('click', ()=>{
   illuWidthPct = ILLU_DEFAULT_W_PCT;
   illuPosX = null; illuPosY = null;
   illuBrightness = 100;
+  illuFlipped = false;
+  illuOriginalName = null;
   update();
+});
+
+document.getElementById('illuFlipBtn').addEventListener('click', ()=>{
+  if(!illuData) return;
+  illuFlipped = !illuFlipped;
+  update();
+});
+
+document.getElementById('illuCleanupToleranceRange').addEventListener('input', function(){
+  document.getElementById('illuCleanupToleranceLabel').textContent = this.value;
+});
+
+document.getElementById('illuCleanupBtn').addEventListener('click', async ()=>{
+  if(!illuData){
+    alert('Sube una imagen primero.');
+    return;
+  }
+  const btn = document.getElementById('illuCleanupBtn');
+  const original = btn.textContent;
+  btn.textContent = 'Procesando...';
+  btn.disabled = true;
+  try{
+    const tolerance = parseInt(document.getElementById('illuCleanupToleranceRange').value, 10);
+    illuData = await cleanupBackground(illuData, tolerance);
+    update();
+  }catch(err){
+    console.error(err);
+    alert('No se ha podido procesar la imagen.');
+  }finally{
+    btn.textContent = original;
+    btn.disabled = false;
+  }
 });
 
 (function(){
@@ -1513,7 +1523,8 @@ function collectState(){
     statProfiles: JSON.parse(JSON.stringify(statProfiles)),
     options: JSON.parse(JSON.stringify(options)),
     illuData,
-    illuWidthPct, illuPosX, illuPosY, illuBrightness,
+    illuWidthPct, illuPosX, illuPosY, illuBrightness, illuFlipped, illuOriginalName,
+    sheetLogoOverride,
     preset: currentPreset,
     sheetType,
     monturas: JSON.parse(JSON.stringify(monturas)),
@@ -1522,6 +1533,7 @@ function collectState(){
 }
 
 function applyState(s){
+  suppressDirty = true;
   document.getElementById('title').value = s.title ?? '';
   document.getElementById('uname').value = s.uname ?? '';
   document.getElementById('pts').value = s.pts ?? '';
@@ -1555,17 +1567,20 @@ function applyState(s){
   options = s.options || [];
   monturas = s.monturas || [];
   sheetType = s.sheetType === 'personaje' ? 'personaje' : 'unidad';
-  syncTypeSwitchUI();
   if(!armyLogoData && s.logoData) armyLogoData = s.logoData; /* migration from old per-sheet logo */
   illuData = s.illuData || null;
   illuWidthPct = (s.illuWidthPct != null) ? s.illuWidthPct : ILLU_DEFAULT_W_PCT;
   illuBrightness = (s.illuBrightness != null) ? s.illuBrightness : 100;
+  illuFlipped = !!s.illuFlipped;
+  illuOriginalName = s.illuOriginalName || null;
   illuPosX = (s.illuPosX != null) ? s.illuPosX : null;
   illuPosY = (s.illuPosY != null) ? s.illuPosY : null;
+  sheetLogoOverride = s.sheetLogoOverride || null;
   cardMaxHeight = (s.cardMaxHeight != null) ? s.cardMaxHeight : CARD_HEIGHT_DEFAULT;
   applyCardMaxHeight();
   if(s.preset && PRESETS[s.preset]) applyPreset(s.preset);
   renderStatRows(); renderOptRows(); renderMonturaRows(); update();
+  suppressDirty = false;
 }
 
 /* ---------- multi-sheet management ---------- */
@@ -1575,9 +1590,39 @@ function makeBlankState(type){
     title:'Nueva ficha', uname:'Nueva ficha', pts:'', size:'', equipo:'', rules:'',
     cmdMusico:'', cmdPortaestandarte:'', cmdCampeonNombre:'', cmdCampeonPts:'',
     statProfiles:[{name:'Nuevo perfil', vals:['0','0','0','0','0','0','0','0','0']}],
-    options:[], illuData:null, illuWidthPct:ILLU_DEFAULT_W_PCT, illuPosX:null, illuPosY:null, illuBrightness:100, preset:'bretonia',
+    options:[], illuData:null, illuWidthPct:ILLU_DEFAULT_W_PCT, illuPosX:null, illuPosY:null, illuBrightness:100,
+    illuFlipped:false, illuOriginalName:null, sheetLogoOverride:null, preset:'bretonia',
     sheetType:t, monturas:[], cardMaxHeight:CARD_HEIGHT_DEFAULT
   };
+}
+
+let suppressDirty = false;
+let hasUnsavedChanges = false;
+let loadedFileName = null;
+
+function markDirty(){
+  if(suppressDirty) return;
+  hasUnsavedChanges = true;
+  updateFileStatusUI();
+}
+
+function updateFileStatusUI(){
+  const box = document.getElementById('fileStatusBar');
+  if(!box) return;
+  if(!loadedFileName && !hasUnsavedChanges){
+    box.style.display = 'none';
+    return;
+  }
+  box.style.display = '';
+  document.getElementById('fileStatusName').textContent = loadedFileName || '(todavía sin guardar)';
+  const dirtySpan = document.getElementById('fileStatusDirty');
+  if(hasUnsavedChanges){
+    dirtySpan.textContent = '● cambios sin guardar';
+    dirtySpan.style.color = '#b33';
+  }else{
+    dirtySpan.textContent = '✓ guardado';
+    dirtySpan.style.color = '#3a7a3a';
+  }
 }
 
 function syncCurrentSheet(){
@@ -1588,6 +1633,7 @@ function syncCurrentSheet(){
       const icon = sheets[currentSheetIndex].sheetType === 'personaje' ? '🧙' : '📜';
       tab.textContent = icon + ' ' + (sheets[currentSheetIndex].title || 'Sin título');
     }
+    markDirty();
   }
 }
 
@@ -1616,7 +1662,6 @@ function renderSheetTabs(){
     const tab = document.createElement('div');
     tab.className = 'sheet-tab' + (i === currentSheetIndex ? ' active' : '');
     tab.dataset.idx = i;
-    tab.draggable = true;
     tab.innerHTML = `<span class="drag-dot" title="Arrastra para reordenar">⠿</span>` +
       `<input type="checkbox" data-check="${i}" ${exportChecks[i] ? 'checked' : ''} title="Incluir esta ficha al exportar">` +
       `<span class="sheet-tab-name">${sh.sheetType === 'personaje' ? '🧙' : '📜'} ${escHtml(sh.title || 'Sin título')}</span>` +
@@ -1626,12 +1671,14 @@ function renderSheetTabs(){
       if(e.target.closest('button') || e.target.matches('input[type=checkbox]')) return;
       switchToSheet(i);
     });
-    tab.addEventListener('dragstart', e=>{
+    const dragHandle = tab.querySelector('.drag-dot');
+    dragHandle.draggable = true;
+    dragHandle.addEventListener('dragstart', e=>{
       sheetDragIndex = i;
       tab.classList.add('dragging');
       e.dataTransfer.effectAllowed = 'move';
     });
-    tab.addEventListener('dragend', ()=> tab.classList.remove('dragging'));
+    dragHandle.addEventListener('dragend', ()=> tab.classList.remove('dragging'));
     tab.addEventListener('dragover', e=> e.preventDefault());
     tab.addEventListener('drop', e=>{
       e.preventDefault();
@@ -1699,13 +1746,18 @@ function switchToSheet(index){
   renderSheetTabs();
 }
 
-document.getElementById('addSheetBtn').addEventListener('click', ()=>{
+function createNewSheet(type){
   syncCurrentSheet();
-  sheets.push(makeBlankState(sheetType));
-  currentSheetIndex = sheets.length - 1;
+  const insertAt = currentSheetIndex + 1;
+  sheets.splice(insertAt, 0, makeBlankState(type));
+  exportChecks.splice(insertAt, 0, true);
+  currentSheetIndex = insertAt;
   applyState(sheets[currentSheetIndex]);
   renderSheetTabs();
-});
+}
+
+document.getElementById('addSheetUnitBtn').addEventListener('click', ()=> createNewSheet('unidad'));
+document.getElementById('addSheetCharBtn').addEventListener('click', ()=> createNewSheet('personaje'));
 
 document.getElementById('clearCurrentSheetBtn').addEventListener('click', ()=>{
   if(sheets.length === 0) return;
@@ -1766,9 +1818,9 @@ async function saveJsonWithPicker(dataObj, suggestedName){
       const writable = await handle.createWritable();
       await writable.write(jsonStr);
       await writable.close();
-      return;
+      return handle.name || suggestedName;
     }catch(err){
-      if(err && err.name === 'AbortError') return;
+      if(err && err.name === 'AbortError') return null;
       /* fall through to normal download */
     }
   }
@@ -1777,12 +1829,18 @@ async function saveJsonWithPicker(dataObj, suggestedName){
   link.href = URL.createObjectURL(blob);
   link.download = suggestedName;
   link.click();
+  return suggestedName;
 }
 
-document.getElementById('btnSaveJson').addEventListener('click', ()=>{
+document.getElementById('btnSaveJson').addEventListener('click', async ()=>{
   syncCurrentSheet();
   const data = { sheets: JSON.parse(JSON.stringify(sheets)), activeIndex: currentSheetIndex, armyLogoData };
-  saveJsonWithPicker(data, 'coleccion_fichas.json');
+  const savedName = await saveJsonWithPicker(data, 'coleccion_fichas.json');
+  if(savedName){
+    loadedFileName = savedName;
+    hasUnsavedChanges = false;
+    updateFileStatusUI();
+  }
 });
 document.getElementById('loadJsonFile').addEventListener('change', function(){
   const f = this.files[0];
@@ -1802,6 +1860,9 @@ document.getElementById('loadJsonFile').addEventListener('change', function(){
       armyLogoData = data.armyLogoData || null;
       applyState(sheets[currentSheetIndex]);
       renderSheetTabs();
+      loadedFileName = f.name;
+      hasUnsavedChanges = false;
+      updateFileStatusUI();
     }catch(err){
       alert('No se ha podido leer ese archivo. Comprueba que sea un .json exportado desde aquí.');
     }
@@ -1936,21 +1997,22 @@ document.getElementById('btnExportWord').addEventListener('click', async ()=>{
   btn.textContent = 'Generando documento...';
   btn.disabled = true;
   try{
-    let logoForExport = armyLogoData;
-    if(grayscaleMode){
-      logoForExport = await grayscaleImageData(armyLogoData);
-    }
     const parts = [];
     for(let n=0; n<selected.length; n++){
       const idx = selected[n];
       let s = Object.assign({}, sheets[idx]);
+      let sheetLogo = s.sheetLogoOverride || armyLogoData;
+      if(s.illuFlipped){
+        s.illuData = await flipImageHorizontal(s.illuData);
+      }
       if((s.illuBrightness||100) !== 100){
         s.illuData = await adjustImageBrightness(s.illuData, s.illuBrightness || 100);
       }
       if(grayscaleMode){
         s.illuData = await grayscaleImageData(s.illuData);
+        sheetLogo = await grayscaleImageData(sheetLogo);
       }
-      const unitHtml = buildUnitWordHtml(s, grayscaleMode, logoForExport);
+      const unitHtml = buildUnitWordHtml(s, grayscaleMode, sheetLogo);
       parts.push(n === 0 ? unitHtml : `<br clear="all" style="mso-special-character:line-break;page-break-before:always;">${unitHtml}`);
     }
     const html = wordDocWrapper(parts.join(''));
@@ -2112,78 +2174,76 @@ document.getElementById('btnDocSummary').addEventListener('click', async ()=>{
   }
   const btn = document.getElementById('btnDocSummary');
   const original = btn.textContent;
-  btn.textContent = 'Generando resumen...';
+  btn.textContent = 'Generando hoja de referencia...';
   btn.disabled = true;
   try{
     const headFont = "font-family:Georgia,'Times New Roman',serif;letter-spacing:.03em;";
     const bodyFontFam = "font-family:'PT Serif',Georgia,serif;";
-    const thStyle = `border:1px solid #1c1a16;padding:2px 3px;background:#e6e2d4;font-weight:bold;text-align:center;${headFont}font-size:8pt;`;
-    const nameColWidth = 92;
-    const statColWidth = 24;
+    const thStyle = `border:1px solid #1c1a16;padding:1px 3px;line-height:1.05;background:#e6e2d4;font-weight:bold;text-align:center;${headFont}font-size:8pt;`;
+    const nameColWidth = 100;
+    const statColWidth = 22;
+    const rulesColWidth = 300;
 
-    /* Página 1: todos los atributos de todos los perfiles, en una única tabla
-       compacta y sin títulos de unidad (para que quepa el máximo posible).
-       El primer perfil de cada ficha sale un poco más grande que los
-       siguientes, para poder distinguir dónde empieza cada unidad sin
-       necesidad de un título aparte. */
-    const colgroup = `<colgroup><col style="width:${nameColWidth}px;">` +
-      statHeaders.map(()=>`<col style="width:${statColWidth}px;">`).join('') + `</colgroup>`;
-    let rows = '';
-    sheets.forEach(s=>{
-      (s.statProfiles||[]).forEach((p, pi)=>{
-        const isFirst = pi === 0;
-        const size = isFirst ? '8pt' : '7.2pt';
-        const topBorder = isFirst ? 'border-top:1.5px solid #1c1a16;' : '';
-        const tdStyle = `border:1px solid #1c1a16;${topBorder}padding:${isFirst?'2.5px 3px':'1.5px 3px'};${bodyFontFam}font-size:${size};`;
-        rows += `<tr><td style="${tdStyle}font-weight:bold;">${escHtml(p.name)}</td>` +
-          p.vals.map(v=>`<td style="${tdStyle}text-align:center;">${escHtml(v)}</td>`).join('') + '</tr>';
+    /* Una única tabla por grupo (Personajes / Unidades), al estilo de la
+       "Hoja de referencia" de los Manuscritos de Nuth: cada ficha aparece
+       como uno o más perfiles (fila por perfil), y las reglas especiales de
+       la ficha se muestran en una columna aparte a la derecha (una sola vez
+       por ficha, ya que en esta herramienta las reglas se guardan a nivel
+       de ficha y no de perfil individual). */
+    function buildGroupTable(list){
+      if(list.length === 0) return '';
+      const colgroup = `<colgroup><col style="width:${nameColWidth}px;">` +
+        statHeaders.map(()=>`<col style="width:${statColWidth}px;">`).join('') +
+        `<col style="width:${rulesColWidth}px;"></colgroup>`;
+      const head = `<tr><th style="${thStyle}text-align:left;">Perfil</th>` +
+        statHeaders.map(h=>`<th style="${thStyle}">${h}</th>`).join('') +
+        `<th style="${thStyle}text-align:left;">Reglas especiales</th></tr>`;
+      let rows = '';
+      list.forEach(s=>{
+        const profs = (s.statProfiles||[]).filter(p=>p);
+        if(profs.length === 0) return;
+        const rulesRaw = formatRulesText(s.rules);
+        const rulesHtml = rulesRaw ? escHtml(rulesRaw).replace(/\n/g,'<br>') : '-';
+        profs.forEach((p, pi)=>{
+          const isFirst = pi === 0;
+          const size = isFirst ? '7.5pt' : '7pt';
+          const topBorder = isFirst ? 'border-top:1.5px solid #1c1a16;' : '';
+          const tdStyle = `border:1px solid #1c1a16;${topBorder}padding:${isFirst?'1.5px 3px':'0.5px 3px'};line-height:1.05;${bodyFontFam}font-size:${size};`;
+          rows += `<tr><td style="${tdStyle}font-weight:bold;">${escHtml(p.name)}</td>` +
+            p.vals.map(v=>`<td style="${tdStyle}text-align:center;">${escHtml(v)}</td>`).join('');
+          if(isFirst){
+            rows += `<td style="${tdStyle}font-style:italic;" rowspan="${profs.length}">${rulesHtml}</td>`;
+          }
+          rows += '</tr>';
+        });
       });
-    });
-    const head = `<tr><th style="${thStyle}text-align:left;">Perfil</th>` + statHeaders.map(h=>`<th style="${thStyle}">${h}</th>`).join('') + '</tr>';
-    const attributesTable = `<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;width:${nameColWidth + statColWidth*statHeaders.length}px;table-layout:fixed;">${colgroup}${head}${rows}</table>`;
-    const attributesTitle = `<div style="${headFont}font-size:16pt;font-weight:bold;text-transform:uppercase;letter-spacing:1px;color:#1c1a16;margin-bottom:8px;">Resumen de atributos</div>`;
+      return `<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;width:${nameColWidth + statColWidth*statHeaders.length + rulesColWidth}px;table-layout:fixed;margin-bottom:8px;">${colgroup}${head}${rows}</table>`;
+    }
 
-    /* Página 2: reglas especiales, en una tabla de dos columnas (ficha / reglas). */
-    const ruleRows = sheets.map(s=>{
-      const rulesRaw = formatRulesText(s.rules);
-      if(!rulesRaw) return '';
-      return `<tr>` +
-        `<td style="border:1px solid #1c1a16;padding:4px 6px;${bodyFontFam}font-size:9pt;font-weight:bold;vertical-align:top;width:150px;">${escHtml(s.title||'Sin título')}</td>` +
-        `<td style="border:1px solid #1c1a16;padding:4px 6px;${bodyFontFam}font-size:9pt;font-style:italic;vertical-align:top;">${escHtml(rulesRaw).replace(/\n/g,'<br>')}</td>` +
-        `</tr>`;
-    }).filter(Boolean).join('');
-    const rulesTitle = `<div style="${headFont}font-size:16pt;font-weight:bold;text-transform:uppercase;letter-spacing:1px;color:#1c1a16;margin-bottom:8px;">Reglas especiales</div>`;
-    const rulesHead = `<tr><th style="${thStyle}text-align:left;width:150px;">Ficha</th><th style="${thStyle}text-align:left;">Reglas especiales</th></tr>`;
-    const rulesTable = ruleRows
-      ? `<table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;width:100%;table-layout:fixed;">${rulesHead}${ruleRows}</table>`
-      : `<div style="${bodyFontFam}font-size:9pt;">(Ninguna ficha tiene reglas especiales.)</div>`;
+    const groupTitle = (text)=> `<div style="${headFont}font-size:12pt;font-weight:bold;text-transform:uppercase;letter-spacing:1px;color:#1c1a16;margin:6px 0 4px;">${text}</div>`;
 
-    const pageBreak = '<br clear="all" style="mso-special-character:line-break;page-break-before:always;">';
-    const html = wordDocWrapper(attributesTitle + attributesTable + pageBreak + rulesTitle + rulesTable);
+    const personajes = sheets.filter(s=> s.sheetType === 'personaje');
+    const unidades = sheets.filter(s=> s.sheetType !== 'personaje');
+
+    const mainTitle = `<div style="${headFont}font-size:16pt;font-weight:bold;text-transform:uppercase;letter-spacing:1px;color:#1c1a16;margin-bottom:10px;">Hoja de referencia</div>`;
+    let body = mainTitle;
+    if(personajes.length){
+      body += groupTitle('Personajes') + buildGroupTable(personajes);
+    }
+    if(unidades.length){
+      body += groupTitle('Unidades') + buildGroupTable(unidades);
+    }
+
+    const html = wordDocWrapper(body);
     const blob = new Blob(['\ufeff', html], {type:'application/msword'});
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.download = 'resumen_perfiles.doc';
+    link.download = 'hoja_de_referencia.doc';
     link.click();
   }finally{
     btn.textContent = original;
     btn.disabled = false;
   }
-});
-
-/* ---------- sheet type switch (unidad / personaje) ---------- */
-function syncTypeSwitchUI(){
-  document.querySelectorAll('.type-btn').forEach(b=>{
-    b.classList.toggle('active', b.dataset.type === sheetType);
-  });
-}
-
-document.querySelectorAll('.type-btn').forEach(btn=>{
-  btn.addEventListener('click', ()=>{
-    sheetType = btn.dataset.type;
-    syncTypeSwitchUI();
-    update();
-  });
 });
 
 /* ---------- resizable panel ---------- */
@@ -2217,6 +2277,13 @@ update();
 sheets = [collectState()];
 currentSheetIndex = 0;
 renderSheetTabs();
+
+window.addEventListener('beforeunload', e=>{
+  if(hasUnsavedChanges){
+    e.preventDefault();
+    e.returnValue = '';
+  }
+});
 </script>
 </body>
 </html>
